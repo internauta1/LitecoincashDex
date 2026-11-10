@@ -45,17 +45,7 @@ jobs:
       - name: Resolve locked dependencies (no SDK/coin/KDF transformer)
         run: flutter pub get --enforce-lockfile
       - name: Offline regression tests (mocked RPC and loopback SSE fixtures only)
-        run: >-
-          flutter test --no-pub
-          test/community_build_test.dart test/retired_buy_sell_routes_test.dart
-          test/wallet_coin_projection_test.dart test/best_offers_test.dart
-          test/best_offers_taker_test.dart test/best_orders_panel_test.dart
-          test/best_orders_results_test.dart test/best_orders_tabs_test.dart
-          test/best_orders_preview_test.dart test/orderbook_ownership_test.dart
-          test/orderbook_ownership_widget_test.dart
-          test/orderbook_trading_scope_regression_test.dart
-          test/private_manual_profile_test.dart
-          test_units/tests/windows/isolated_sse_pipeline_test.dart
+        run: flutter test --no-pub test/ test_units/tests/windows/isolated_sse_pipeline_test.dart
       - name: Refuse an explicit upstream network build
         run: >-
           flutter test --no-pub test/community_build_rejection_test.dart

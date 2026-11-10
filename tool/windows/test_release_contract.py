@@ -68,6 +68,9 @@ class ArtifactContractTests(unittest.TestCase):
             finding={'File':'fixture.dart','RuleID':'generic-api-key','StartLine':1}
             manifest={'reviewedFindings':[{'path':'fixture.dart','rule':'generic-api-key','line':1,'sourceSha256':sha}]}
             self.assertTrue(scan.reviewed(finding,root,manifest))
+            # A matching current file must never approve unknown historical bytes.
+            historical={**finding,'Commit':'0'*40}
+            self.assertFalse(scan.reviewed(historical,root,manifest))
             path.write_bytes(b'changed or newly added credential')
             self.assertFalse(scan.reviewed(finding,root,manifest))
             finding['StartLine']=2

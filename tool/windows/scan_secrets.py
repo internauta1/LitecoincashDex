@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import re
 import subprocess
 import urllib.request
 import zipfile
@@ -17,7 +18,18 @@ def reviewed(finding, root, manifest):
     path = root / name
     if not path.resolve().is_relative_to(root.resolve()) or not path.is_file():
         return False
-    sha = hashlib.sha256(path.read_bytes()).hexdigest().upper()
+    commit = finding.get('Commit')
+    if commit:
+        if not re.fullmatch('[0-9a-fA-F]{40}', commit):
+            return False
+        historical = subprocess.run(['git', '-C', str(root), 'show', commit+':'+name],
+                                    capture_output=True)
+        if historical.returncode != 0:
+            return False
+        content = historical.stdout
+    else:
+        content = path.read_bytes()
+    sha = hashlib.sha256(content).hexdigest().upper()
     return any(item['path'] == name and item['rule'] == finding['RuleID']
                and item['line'] == finding['StartLine'] and item['sourceSha256'] == sha
                for item in manifest['reviewedFindings'])
