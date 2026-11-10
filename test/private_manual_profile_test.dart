@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -61,8 +62,14 @@ void main() {
   late Directory directory;
   group('private profile persistence', () {
     setUp(() async {
-      directory = await Directory.systemTemp.createTemp(
+      final created = await Directory.systemTemp.createTemp(
         'private-profile-unit-',
+      );
+      // Windows TEMP can use an 8.3 alias. The positive fixture must supply
+      // its actual path; the production guard still rejects redirected input.
+      directory = Directory(await created.resolveSymbolicLinks());
+      stdout.writeln(
+        'WINDOWS_PROFILE_FIXTURE ${jsonEncode({'exists': await created.exists(), 'normalizedEqualsCanonical': p.equals(p.normalize(created.path), directory.path), 'suppliedUsesShortAlias': created.path.contains('~'), 'rootIsLink': await FileSystemEntity.type(created.path, followLinks: false) == FileSystemEntityType.link})}',
       );
       await File(
         p.join(directory.path, PrivateManualProfile.markerName),
@@ -120,6 +127,67 @@ void main() {
         }
         expect(PathProviderPlatform.instance, isNot(same(paths)));
       },
+    );
+    test(
+      'rejects a junction root and a redirected child directory',
+      () async {
+        final shell = Platform.environment['SystemRoot'];
+        if (shell == null) throw StateError('Windows directory unavailable');
+        final outside = await directory.parent.createTemp(
+          'profile-link-target-',
+        );
+        final link = p.join(
+          directory.parent.path,
+          '${p.basename(directory.path)}-junction',
+        );
+        addTearDown(() async {
+          if (await FileSystemEntity.type(link, followLinks: false) ==
+              FileSystemEntityType.link) {
+            await Link(link).delete();
+          }
+          await outside.delete(recursive: true);
+        });
+        Future<void> junction(String path, String target) async {
+          final result = await Process.run(
+            p.join(
+              shell,
+              'System32',
+              'WindowsPowerShell',
+              'v1.0',
+              'powershell.exe',
+            ),
+            [
+              '-NoLogo',
+              '-NoProfile',
+              '-NonInteractive',
+              '-Command',
+              r"$ErrorActionPreference='Stop'; New-Item -ItemType Junction -Path $env:TEST_PROFILE_LINK -Target $env:TEST_PROFILE_TARGET | Out-Null",
+            ],
+            environment: {
+              'TEST_PROFILE_LINK': path,
+              'TEST_PROFILE_TARGET': target,
+            },
+          );
+          if (result.exitCode != 0) {
+            throw StateError('Synthetic junction creation failed');
+          }
+        }
+
+        await junction(link, directory.path);
+        await expectLater(PrivateManualProfile.open(link), throwsStateError);
+        final child = p.join(directory.path, 'support');
+        await junction(child, outside.path);
+        try {
+          await expectLater(
+            PrivateManualProfile.open(directory.path),
+            throwsStateError,
+          );
+        } finally {
+          await Link(child).delete();
+        }
+        expect(await outside.list().toList(), isEmpty);
+      },
+      skip: !Platform.isWindows,
     );
   });
 }

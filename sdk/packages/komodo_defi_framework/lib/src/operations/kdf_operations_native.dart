@@ -73,19 +73,36 @@ IKdfOperations createLocalKdfOperations({
   }
 }
 
+/// A fixed, metadata-only failure; shell output can contain local paths.
+class WindowsKdfTempProtectionException extends StateError {
+  WindowsKdfTempProtectionException(this.exitCode)
+    : category = switch (exitCode) {
+        2 => 'missing_or_reparse',
+        3 => 'owner_or_protection_mismatch',
+        4 => 'unexpected_dacl_rules',
+        _ => 'shell_error',
+      },
+      super('KDF temporary directory protection unavailable');
+
+  final int exitCode;
+  final String category;
+}
+
 /// Restrict the directory before the legacy executable's JSON is written.
 Future<Directory> prepareWindows8762KdfTemp() async {
   final cache = await getApplicationCacheDirectory();
   await cache.create(recursive: true);
+  if (!p.equals(cache.absolute.path, await cache.resolveSymbolicLinks())) {
+    throw StateError('Redirected KDF cache directory');
+  }
   final directory = Directory(p.join(cache.path, 'secure-kdf-temp-8762'));
   final type = await FileSystemEntity.type(directory.path, followLinks: false);
-  if (type == FileSystemEntityType.notFound) await directory.create();
-  if ((type != FileSystemEntityType.notFound &&
-          type != FileSystemEntityType.directory) ||
-      !p.equals(
-        directory.absolute.path,
-        await directory.resolveSymbolicLinks(),
-      )) {
+  if (type != FileSystemEntityType.notFound &&
+      (type != FileSystemEntityType.directory ||
+          !p.equals(
+            directory.absolute.path,
+            await directory.resolveSymbolicLinks(),
+          ))) {
     throw StateError('Redirected KDF temporary directory');
   }
   final shell = Platform.environment['SystemRoot'];
@@ -100,16 +117,27 @@ Future<Directory> prepareWindows8762KdfTemp() async {
 $ErrorActionPreference = 'Stop'
 $path = $env:NEXT_KDF_TEMP_DIRECTORY
 $item = [IO.DirectoryInfo]::new($path)
-if (-not $item.Exists -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { exit 2 }
 $owner = [Security.Principal.WindowsIdentity]::GetCurrent().User
 $system = [Security.Principal.SecurityIdentifier]::new('S-1-5-18')
-if ($item.GetAccessControl().GetOwner([Security.Principal.SecurityIdentifier]).Value -ne $owner.Value) { exit 3 }
 $acl = [Security.AccessControl.DirectorySecurity]::new()
 $acl.SetAccessRuleProtection($true, $false)
 foreach ($sid in @($owner, $system)) {
   $acl.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new(
     $sid, 'FullControl', 'ContainerInherit, ObjectInherit', 'None', 'Allow'))
 }
+# Elevated tokens can default a new directory's owner to Administrators.
+# Supply owner and protected DACL at creation, never take ownership of an
+# existing directory. Create(DirectorySecurity) does not replace an existing
+# object's descriptor; the same owner/reparse checks below still apply.
+if (-not $item.Exists) {
+  $creationAcl = [Security.AccessControl.DirectorySecurity]::new()
+  $creationAcl.SetSecurityDescriptorBinaryForm($acl.GetSecurityDescriptorBinaryForm())
+  $creationAcl.SetOwner($owner)
+  $item.Create($creationAcl)
+  $item.Refresh()
+}
+if (-not $item.Exists -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { exit 2 }
+if ($item.GetAccessControl().GetOwner([Security.Principal.SecurityIdentifier]).Value -ne $owner.Value) { exit 3 }
 # Use the Windows PowerShell 5.1 .NET APIs without loading a host-dependent module.
 $item.SetAccessControl($acl)
 $actual = $item.GetAccessControl()
@@ -125,7 +153,15 @@ if ($rules.Count -ne 2 -or @($rules | Where-Object {
     environment: {'NEXT_KDF_TEMP_DIRECTORY': directory.path},
   ).timeout(const Duration(seconds: 8));
   if (result.exitCode != 0) {
-    throw StateError('KDF temporary directory protection unavailable');
+    throw WindowsKdfTempProtectionException(result.exitCode);
+  }
+  if (await FileSystemEntity.type(directory.path, followLinks: false) !=
+          FileSystemEntityType.directory ||
+      !p.equals(
+        directory.absolute.path,
+        await directory.resolveSymbolicLinks(),
+      )) {
+    throw StateError('Redirected KDF temporary directory');
   }
   return directory;
 }

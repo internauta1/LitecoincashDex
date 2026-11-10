@@ -3,9 +3,10 @@
   "referenceRevision": "8762-core-navigation-validation",
   "referenceRuntimeManifestSha256": "7BF4FF526DF2CE4D289F0287D5EC3ADFB5BCB36739DDCC5D4D2D918F8E64F847",
   "sdkMode": "vendored modified sources; upstream parent revision unknown",
-  "sdkSourceManifestSha256": "122C6471A26B49B67FE2AC4F7DF2834CC8F02AE823729793092D4F1BD1CC90AC",
+  "sdkSourceManifestSha256": "D098C31C293573C667501B87BF6E56595BE72713199BD84B6D3CDE7779184A03",
   "pinnedPublicAssets": 454,
   "privateDataCopied": false,
   "historicalGitLineageClaimed": false,
-  "sdkManifestScope": "All SDK files tracked by the clean import; excludes ignored/generated build-provenance markers"
+  "sdkManifestScope": "All SDK files tracked by the clean import; excludes ignored/generated build-provenance markers",
+  "postR1SecurityChange": "Windows temporary directory creation supplies user owner and protected DACL before use; existing foreign owners still refused"
 }

@@ -4173,7 +4173,7 @@
   },
   {
     "path": "sdk/packages/komodo_defi_framework/lib/src/operations/kdf_operations_native.dart",
-    "sha256": "BFE0D416B0D25B3A9AA763A1443274D7BCC14B9B43B1374F36E26F24ACC7F66D"
+    "sha256": "36121A2F38D1A97DB257B56B5CDE83D39663E147BE27502BE9536C5F21032DCD"
   },
   {
     "path": "sdk/packages/komodo_defi_framework/lib/src/operations/kdf_operations_native_stub.dart",
