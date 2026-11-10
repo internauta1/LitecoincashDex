@@ -2188,14 +2188,6 @@
     "sha256": "3B7BABB57A80A7E4705B1F38FCC7ADC734FF4176E16DD9713BA1A7408987AB34"
   },
   {
-    "path": "sdk/packages/komodo_defi_framework/android/app/src/main/cpp/libs/arm64-v8a/.api_last_updated_android-aarch64",
-    "sha256": "4994A5CA276835EAD1F552EFCCA44FA78D85E9C8C167812F8FF2D9AE2BBC3D22"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/android/app/src/main/cpp/libs/armeabi-v7a/.api_last_updated_android-armv7",
-    "sha256": "27F7D90A4E65D258391BDE4AB83BBE10884027A3EF2BB571DA7D031CB2F58003"
-  },
-  {
     "path": "sdk/packages/komodo_defi_framework/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java",
     "sha256": "9CC55CBDA1CB58D7305BE5CDFCA43B841BAF87E2AF388063AF9F222E60F556BA"
   },
@@ -4056,10 +4048,6 @@
     "sha256": "53C8F59344D187C9A882B2CE794BA279833E2E189D637AE36335EDDE7F5874CB"
   },
   {
-    "path": "sdk/packages/komodo_defi_framework/ios/.api_last_updated_ios",
-    "sha256": "8BC857858553D69A071F8BB4ED19D3DC35C852822F8717EC3D604461190E7092"
-  },
-  {
     "path": "sdk/packages/komodo_defi_framework/ios/Classes/komodo_defi_framework.c",
     "sha256": "1D8AFDED09FEBC840D61B674E1A2AEA27B579EE0714C44F56EC67EF8B58052B5"
   },
@@ -4288,10 +4276,6 @@
     "sha256": "1CC38ACCF37CDD1F5EDCCC118843DB064C17FB4D0E71DE41EF5D7AC0AD32D29F"
   },
   {
-    "path": "sdk/packages/komodo_defi_framework/linux/bin/.api_last_updated_linux",
-    "sha256": "52D53467CF528394169CB5133B275A63CCC549CD18FD5F283E40B13DAD8453AF"
-  },
-  {
     "path": "sdk/packages/komodo_defi_framework/linux/flutter/generated_plugin_registrant.cc",
     "sha256": "749A9451DAD2825E6178746A37D04FDEDAE865919236B4C7D50480F84D2ED501"
   },
@@ -4318,10 +4302,6 @@
   {
     "path": "sdk/packages/komodo_defi_framework/macos/Flutter/GeneratedPluginRegistrant.swift",
     "sha256": "A3F99516E4469271EEEFEB8F896B219C1ABE19B18CBEDC898471B1C4FF8028DC"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/macos/bin/.api_last_updated_macos",
-    "sha256": "F98FF8C6CD2D5B72606614B7859048040661E2F06B7AB7C640F4EEB9565BF455"
   },
   {
     "path": "sdk/packages/komodo_defi_framework/macos/komodo_defi_framework.podspec",
@@ -4404,54 +4384,6 @@
     "sha256": "8DCA25EC6E99B847F8C91599918154D88FABC0F4935745448790EB6D139F2026"
   },
   {
-    "path": "sdk/packages/komodo_defi_framework/web/kdf/bin/.api_last_updated_web",
-    "sha256": "DCC276F4901F655E209B369614C6B72781A827FDBE902FEC4C5BA13DBF47F1B4"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/web/kdf/bin/.gitignore",
-    "sha256": "684888C0EBB17F374298B65EE2807526C066094C701BCC7EBBE1C1095F494FC1"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/web/kdf/bin/kdflib.d.ts",
-    "sha256": "8F16444B5E37F6C24E0E46A20C495EAB582FE2543C1007E14675083899A4FA01"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/web/kdf/bin/kdflib.js",
-    "sha256": "8666B94742F02731E5F4F1AC4A927B0A2CE297A48FC1E7FBE750F81FFCFB10F1"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/web/kdf/bin/kdflib_bg.wasm.d.ts",
-    "sha256": "03345861E471B631FE09701FD849CA2D316D4A4D445AD4F87490AF2ED440CE86"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/web/kdf/bin/package.json",
-    "sha256": "3DEB2C5EA1E4B8358DA7D3A95E2ECD766D454F406EB360044E45E8ABEFDDDF22"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/web/kdf/bin/snippets/hw_common-c933ea30ea0fef0d/inline0.js",
-    "sha256": "FCAA05077E433B5CFB174377954DFE44CD466BE81336B965C8E885395CA9F90E"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/web/kdf/bin/snippets/hw_common-c933ea30ea0fef0d/inline1.js",
-    "sha256": "E8BCCDB5F7EA2A2AFFCC10BFFF045989D40490101A0575290A30D53009902F0A"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/web/kdf/bin/snippets/libp2p-wasm-ext-7e5f5edb880ee0f5/src/websockets.js",
-    "sha256": "BD1472D656C119FDBE76333C56098C0295D913E5C532EF583EFDA1A59DB41A5A"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/web/kdf/bin/snippets/web3-3a881fca17d19cd8/inline0.js",
-    "sha256": "E0BB201521F4B8F1376499755278783AD46F4CC7A86BC803FEF2DC5B6D264BA9"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/web/kdf/res/kdf_wrapper.dart",
-    "sha256": "1074DB49BCA4981E337CC2120405F895CDBB57C192BC3BFBC0D2312EAF5F5749"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/web/kdf/res/kdflib_bootstrapper.js",
-    "sha256": "400F66BC0476A9DF0781C1D244D90766E81190622E2C11FDC233A388EDC7D8B3"
-  },
-  {
     "path": "sdk/packages/komodo_defi_framework/web/res/kdf_wrapper.dart",
     "sha256": "1074DB49BCA4981E337CC2120405F895CDBB57C192BC3BFBC0D2312EAF5F5749"
   },
@@ -4466,10 +4398,6 @@
   {
     "path": "sdk/packages/komodo_defi_framework/windows/CMakeLists.txt",
     "sha256": "32A9E1D1DAD507F26829AEED19E535ED18753885A8C3D2FEED3DCF8B6FC0618F"
-  },
-  {
-    "path": "sdk/packages/komodo_defi_framework/windows/bin/.api_last_updated_windows",
-    "sha256": "DEDE84FBD4F6DE0A21C7F73100DE6157166182468B501712E21FEE7965183E42"
   },
   {
     "path": "sdk/packages/komodo_defi_framework/windows/mm2_plugin.cpp",
@@ -11690,10 +11618,6 @@
   {
     "path": "sdk/products/komodo_compliance_console/windows/runner/win32_window.h",
     "sha256": "8D66274E09904B50FCC3953153D6B0C1DB13E3037D8753418E0830FFE4D824CB"
-  },
-  {
-    "path": "sdk/pubspec.lock",
-    "sha256": "3F3A8D3C908199582A23062E79F8BB73EE6B7E444DF36600EC6930C10067DE0D"
   },
   {
     "path": "sdk/pubspec.yaml",
