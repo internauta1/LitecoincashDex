@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:web_dex/main.dart' as application;
 import 'package:web_dex/services/testing/disposable_runtime_profile.dart';
 import 'package:web_dex/services/testing/isolated_wallet_test_mode.dart';
+import 'package:web_dex/services/testing/isolated_sse_trace_file.dart';
 
 /// Experimental entry point: refuses startup without the approved profile.
 Future<void> main() async {
@@ -41,7 +42,10 @@ Future<void> main() async {
     rpcPort: kDefaultKdfRpcPort,
   );
   if (const bool.fromEnvironment('LCC_NEXT_SSE_DIAGNOSTICS')) {
-    SseDiagnostics.isolatedRun = SseDiagnostics(print);
+    final liveTrace = IsolatedSseTraceFile.create(profile);
+    SseDiagnostics.isolatedRun = SseDiagnostics((line) {
+      liveTrace.write(line);
+    });
   }
   final trace = File(
     p.join(
