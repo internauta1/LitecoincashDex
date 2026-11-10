@@ -1,0 +1,412 @@
+import 'package:decimal/decimal.dart';
+import 'package:komodo_defi_types/komodo_defi_types.dart';
+import 'package:test/test.dart';
+
+void main() {
+  group('FeeInfo EthGas serialization', () {
+    test('should serialize EthGas with correct type', () {
+      final feeInfo = FeeInfo.ethGas(
+        coin: 'ETH',
+        gasPrice: Decimal.parse('0.000000003'),
+        gas: 21000,
+      );
+
+      final json = feeInfo.toJson();
+
+      expect(json['type'], equals('EthGas'));
+      expect(json['coin'], equals('ETH'));
+      expect(json['gas_price'], equals('0.000000003'));
+      expect(json['gas'], equals(21000));
+    });
+
+    test('should deserialize EthGas from JSON', () {
+      final json = {
+        'type': 'EthGas',
+        'coin': 'ETH',
+        'gas_price': '0.000000003',
+        'gas': 21000,
+      };
+
+      final feeInfo = FeeInfo.fromJson(json);
+
+      expect(feeInfo, isA<FeeInfoEthGas>());
+      final ethGas = feeInfo as FeeInfoEthGas;
+      expect(ethGas.coin, equals('ETH'));
+      expect(ethGas.gasPrice, equals(Decimal.parse('0.000000003')));
+      expect(ethGas.gas, equals(21000));
+    });
+
+    test('should handle backward compatibility with Eth type', () {
+      final json = {
+        'type': 'Eth', // Old format
+        'coin': 'ETH',
+        'gas_price': '0.000000003',
+        'gas': 21000,
+      };
+
+      final feeInfo = FeeInfo.fromJson(json);
+
+      expect(feeInfo, isA<FeeInfoEthGas>());
+      final ethGas = feeInfo as FeeInfoEthGas;
+      expect(ethGas.coin, equals('ETH'));
+      expect(ethGas.gasPrice, equals(Decimal.parse('0.000000003')));
+      expect(ethGas.gas, equals(21000));
+    });
+  });
+
+  group('FeeInfo Tron serialization', () {
+    test('should serialize Tron fee details with correct type', () {
+      final feeInfo = FeeInfo.tron(
+        coin: 'TRX',
+        bandwidthUsed: 345,
+        energyUsed: 29650,
+        bandwidthFee: Decimal.parse('0.345'),
+        energyFee: Decimal.parse('12.453'),
+        accountCreationFee: Decimal.one,
+        totalFeeAmount: Decimal.parse('12.798'),
+      );
+
+      final json = feeInfo.toJson();
+
+      expect(json['type'], equals('Tron'));
+      expect(json['coin'], equals('TRX'));
+      expect(json['bandwidth_used'], equals(345));
+      expect(json['energy_used'], equals(29650));
+      expect(json['bandwidth_fee'], equals('0.345'));
+      expect(json['energy_fee'], equals('12.453'));
+      expect(json['account_creation_fee'], equals('1'));
+      expect(json['total_fee'], equals('12.798'));
+    });
+
+    test('should deserialize Tron fee details from JSON', () {
+      final json = {
+        'type': 'Tron',
+        'coin': 'TRX',
+        'bandwidth_used': 267,
+        'energy_used': 0,
+        'bandwidth_fee': '0.267',
+        'energy_fee': '0',
+        'account_creation_fee': '1',
+        'total_fee': '0.267',
+      };
+
+      final feeInfo = FeeInfo.fromJson(json);
+
+      expect(feeInfo, isA<FeeInfoTron>());
+      final tronFee = feeInfo as FeeInfoTron;
+      expect(tronFee.coin, equals('TRX'));
+      expect(tronFee.bandwidthUsed, equals(267));
+      expect(tronFee.energyUsed, equals(0));
+      expect(tronFee.bandwidthFee, equals(Decimal.parse('0.267')));
+      expect(tronFee.energyFee, equals(Decimal.zero));
+      expect(tronFee.accountCreationFee, equals(Decimal.one));
+      expect(tronFee.totalFeeAmount, equals(Decimal.parse('0.267')));
+      expect(tronFee.totalFee, equals(Decimal.parse('0.267')));
+    });
+
+    test('should include account creation fee in total fee fallback', () {
+      final json = {
+        'type': 'Tron',
+        'coin': 'TRX',
+        'bandwidth_used': 267,
+        'energy_used': 0,
+        'bandwidth_fee': '0.1',
+        'energy_fee': '0',
+        'account_creation_fee': '1',
+      };
+
+      final feeInfo = FeeInfo.fromJson(json);
+
+      expect(feeInfo, isA<FeeInfoTron>());
+      expect(feeInfo.totalFee, equals(Decimal.parse('1.1')));
+    });
+
+    test('should omit account creation fee when it is absent', () {
+      final feeInfo = FeeInfo.tron(
+        coin: 'TRX',
+        bandwidthUsed: 345,
+        energyUsed: 0,
+        bandwidthFee: Decimal.parse('0.345'),
+        energyFee: Decimal.zero,
+      );
+
+      final json = feeInfo.toJson();
+
+      expect(json.containsKey('account_creation_fee'), isFalse);
+      expect(feeInfo.totalFee, equals(Decimal.parse('0.345')));
+    });
+  });
+
+  group('FeeInfo TronGasless serialization', () {
+    test('deserializes gasless fee details from withdraw response', () {
+      final json = {
+        'type': 'TronGasless',
+        'coin': 'USDT-TRC20',
+        'fee_method': 'gasless',
+        'provider_name': 'gasfree',
+        'gasfree_address': 'TCtSt8fCkZcVdrGpaVHUr6P8EmdjysswMF',
+        'transfer_fee': '2.000000',
+        'activation_fee': '1.000000',
+        'total_token_fee': '3.000000',
+        'signed_max_fee': '5.000000',
+        'trace_id': null,
+      };
+
+      final feeInfo = FeeInfo.fromJson(json);
+
+      expect(feeInfo, isA<FeeInfoTronGasless>());
+      final gasless = feeInfo as FeeInfoTronGasless;
+      expect(gasless.coin, equals('USDT-TRC20'));
+      expect(gasless.feeMethod, equals('gasless'));
+      expect(gasless.providerName, equals('gasfree'));
+      expect(
+        gasless.gasfreeAddress,
+        equals('TCtSt8fCkZcVdrGpaVHUr6P8EmdjysswMF'),
+      );
+      expect(gasless.transferFee, equals(Decimal.parse('2.000000')));
+      expect(gasless.activationFee, equals(Decimal.parse('1.000000')));
+      expect(gasless.totalTokenFee, equals(Decimal.parse('3.000000')));
+      expect(gasless.signedMaxFee, equals(Decimal.parse('5.000000')));
+      expect(gasless.totalFee, equals(Decimal.parse('3.000000')));
+    });
+
+    test('round-trips with required signed cap and omitted activation fee', () {
+      final feeInfo = FeeInfo.tronGasless(
+        coin: 'USDT-TRC20',
+        feeMethod: 'gasless',
+        providerName: 'gasfree',
+        gasfreeAddress: 'TCtSt8fCkZcVdrGpaVHUr6P8EmdjysswMF',
+        transferFee: Decimal.parse('2'),
+        totalTokenFee: Decimal.parse('2'),
+        signedMaxFee: Decimal.parse('5'),
+      );
+
+      final json = feeInfo.toJson();
+
+      expect(json['type'], equals('TronGasless'));
+      expect(json['fee_method'], equals('gasless'));
+      expect(json['transfer_fee'], equals('2'));
+      expect(json['total_token_fee'], equals('2'));
+      expect(json.containsKey('activation_fee'), isFalse);
+      expect(json['signed_max_fee'], equals('5'));
+      expect(json, containsPair('trace_id', null));
+
+      // Re-parsing yields an equivalent variant.
+      expect(FeeInfo.fromJson(json), equals(feeInfo));
+    });
+
+    test('rejects undocumented GasFree fee fields', () {
+      final json = {
+        'type': 'TronGasless',
+        'coin': 'USDT-TRC20',
+        'fee_method': 'gasless',
+        'provider_name': 'gasfree',
+        'gasfree_address': 'TCtSt8fCkZcVdrGpaVHUr6P8EmdjysswMF',
+        'transfer_fee': '2',
+        'total_token_fee': '2',
+        'signed_max_fee': '5',
+        'trace_id': null,
+        'request_id': 'must-not-be-accepted',
+      };
+
+      expect(() => FeeInfo.fromJson(json), throwsFormatException);
+    });
+
+    for (final field in const {
+      'coin',
+      'fee_method',
+      'provider_name',
+      'gasfree_address',
+      'transfer_fee',
+      'total_token_fee',
+      'signed_max_fee',
+      'trace_id',
+    }) {
+      test('rejects GasFree preview fee details missing $field', () {
+        final json = <String, dynamic>{
+          'type': 'TronGasless',
+          'coin': 'USDT-TRC20',
+          'fee_method': 'gasless',
+          'provider_name': 'gasfree',
+          'gasfree_address': 'TCtSt8fCkZcVdrGpaVHUr6P8EmdjysswMF',
+          'transfer_fee': '2',
+          'total_token_fee': '2',
+          'signed_max_fee': '5',
+          'trace_id': null,
+        }..remove(field);
+
+        expect(() => FeeInfo.fromJson(json), throwsFormatException);
+      });
+    }
+
+    test('rejects a non-null preview trace', () {
+      final json = {
+        'type': 'TronGasless',
+        'coin': 'USDT-TRC20',
+        'fee_method': 'gasless',
+        'provider_name': 'gasfree',
+        'gasfree_address': 'TCtSt8fCkZcVdrGpaVHUr6P8EmdjysswMF',
+        'transfer_fee': '2',
+        'total_token_fee': '2',
+        'signed_max_fee': '5',
+        'trace_id': 'trace-belongs-to-submit',
+      };
+
+      expect(() => FeeInfo.fromJson(json), throwsFormatException);
+    });
+
+    test(
+      'rejects non-KDF provider identity and serialized zero activation',
+      () {
+        Map<String, dynamic> validJson() => {
+          'type': 'TronGasless',
+          'coin': 'USDT-TRC20',
+          'fee_method': 'gasless',
+          'provider_name': 'gasfree',
+          'gasfree_address': 'TCtSt8fCkZcVdrGpaVHUr6P8EmdjysswMF',
+          'transfer_fee': '2',
+          'total_token_fee': '2',
+          'signed_max_fee': '5',
+          'trace_id': null,
+        };
+
+        expect(
+          () => FeeInfo.fromJson(validJson()..['provider_name'] = 'GasFree'),
+          throwsFormatException,
+        );
+        expect(
+          () => FeeInfo.fromJson(validJson()..['activation_fee'] = '0'),
+          throwsFormatException,
+        );
+      },
+    );
+
+    test('rejects negative, inconsistent, and over-cap fee breakdowns', () {
+      Map<String, dynamic> feeJson({
+        String transferFee = '2',
+        String? activationFee,
+        String totalTokenFee = '2',
+        String signedMaxFee = '5',
+      }) => {
+        'type': 'TronGasless',
+        'coin': 'USDT-TRC20',
+        'fee_method': 'gasless',
+        'provider_name': 'gasfree',
+        'gasfree_address': 'TCtSt8fCkZcVdrGpaVHUr6P8EmdjysswMF',
+        'transfer_fee': transferFee,
+        if (activationFee != null) 'activation_fee': activationFee,
+        'total_token_fee': totalTokenFee,
+        'signed_max_fee': signedMaxFee,
+        'trace_id': null,
+      };
+
+      expect(
+        () => FeeInfo.fromJson(feeJson(transferFee: '-1')),
+        throwsFormatException,
+      );
+      expect(
+        () => FeeInfo.fromJson(feeJson(activationFee: '-1')),
+        throwsFormatException,
+      );
+      expect(
+        () => FeeInfo.fromJson(feeJson(activationFee: '1')),
+        throwsFormatException,
+      );
+      expect(
+        () => FeeInfo.fromJson(feeJson(signedMaxFee: '1')),
+        throwsFormatException,
+      );
+    });
+
+    test('rejects non-string preview fee amounts and null activation fee', () {
+      Map<String, dynamic> validJson() => {
+        'type': 'TronGasless',
+        'coin': 'USDT-TRC20',
+        'fee_method': 'gasless',
+        'provider_name': 'gasfree',
+        'gasfree_address': 'TCtSt8fCkZcVdrGpaVHUr6P8EmdjysswMF',
+        'transfer_fee': '2',
+        'total_token_fee': '2',
+        'signed_max_fee': '5',
+        'trace_id': null,
+      };
+
+      for (final field in const {
+        'transfer_fee',
+        'total_token_fee',
+        'signed_max_fee',
+      }) {
+        final json = validJson()..[field] = 2;
+        expect(
+          () => FeeInfo.fromJson(json),
+          throwsFormatException,
+          reason: '$field must remain a KDF numeric string',
+        );
+      }
+
+      expect(
+        () => FeeInfo.fromJson(validJson()..['activation_fee'] = 1),
+        throwsFormatException,
+      );
+      expect(
+        () => FeeInfo.fromJson(validJson()..['activation_fee'] = null),
+        throwsFormatException,
+      );
+    });
+  });
+
+  group('FeeInfo Tendermint compatibility', () {
+    test('should serialize Tendermint fees as CosmosGas for requests', () {
+      final feeInfo = FeeInfo.tendermint(
+        coin: 'ATOM',
+        amount: Decimal.parse('0.038553'),
+        gasLimit: 100000,
+      );
+
+      final json = feeInfo.toJson();
+
+      expect(json['type'], equals('CosmosGas'));
+      expect(json['coin'], equals('ATOM'));
+      expect(json['gas_limit'], equals(100000));
+      expect(
+        (json['gas_price'] as num).toDouble(),
+        closeTo(0.00000038553, 1e-18),
+      );
+    });
+
+    test(
+      'should serialize Tendermint fees with zero gas limit as zero gas price',
+      () {
+        final feeInfo = FeeInfo.tendermint(
+          coin: 'ATOM',
+          amount: Decimal.parse('0.038553'),
+          gasLimit: 0,
+        );
+
+        final json = feeInfo.toJson();
+
+        expect(json['type'], equals('CosmosGas'));
+        expect(json['gas_limit'], equals(0));
+        expect(json['gas_price'], equals(0.0));
+      },
+    );
+
+    test('should deserialize Tendermint fee details from response JSON', () {
+      final json = {
+        'type': 'Tendermint',
+        'coin': 'ATOM',
+        'amount': '0.038553',
+        'gas_limit': 100000,
+      };
+
+      final feeInfo = FeeInfo.fromJson(json);
+
+      expect(feeInfo, isA<FeeInfoTendermint>());
+      final tendermintFee = feeInfo as FeeInfoTendermint;
+      expect(tendermintFee.coin, equals('ATOM'));
+      expect(tendermintFee.amount, equals(Decimal.parse('0.038553')));
+      expect(tendermintFee.gasLimit, equals(100000));
+      expect(tendermintFee.totalFee, equals(Decimal.parse('0.038553')));
+    });
+  });
+}

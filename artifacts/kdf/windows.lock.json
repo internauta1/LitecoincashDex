@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "platform": "windows-x64",
+  "network": 8762,
+  "executable": "mm2_lccnext_8762.exe",
+  "sha256": "E752B26C8208111DA9AA2F4A1AF61CA0ED818C5BF65E745C1DB21ACF5C34B6D8",
+  "size": 64549376,
+  "embeddedVersion": "2.4.0-beta_43251de1a2026-09-27T19:32:35.529190+00:00",
+  "embeddedSourceCommit": "43251de1a425d32334cd5830bc8ffba716812a0f",
+  "upstreamBaseCommit": "c800ea03f12dab33d2dc04a1d858ee6da111203f",
+  "downloadUrl": null,
+  "sourceArchiveUrl": null,
+  "redistributionReady": false,
+  "note": "Validated binary is provisioned explicitly by hash. Local source commit found; public artifact/source URLs remain pending. Do not substitute another KDF.",
+  "sourceArchiveSha256": "EAFB9910BF9741916B7DC8D82D527642887F7AF0AF7ED58715571870DF1E57F9",
+  "sourceArchiveName": "kdf-43251de1a-source.zip",
+  "sourceEvidence": "Immutable local Git object archive matches embedded version commit; KDF binary was not rebuilt in this preparation.",
+  "upstreamSourceUrl": "https://github.com/GLEECBTC/komodo-defi-framework/commit/c800ea03f12dab33d2dc04a1d858ee6da111203f"
+}

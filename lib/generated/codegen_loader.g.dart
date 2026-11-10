@@ -1,0 +1,1384 @@
+// DO NOT EDIT. This is code generated via package:easy_localization/generate.dart
+
+// ignore_for_file: constant_identifier_names
+
+abstract class LocaleKeys {
+  static const orderbookOwnOrder = 'orderbookOwnOrder';
+  static const walletLoginPreparing = 'walletLoginPreparing';
+  static const walletLoginSettingsUnavailable = 'walletLoginSettingsUnavailable';
+  static const plsActivateKmd = 'plsActivateKmd';
+  static const rewardClaiming = 'rewardClaiming';
+  static const noKmdAddress = 'noKmdAddress';
+  static const dex = 'dex';
+  static const asset = 'asset';
+  static const assets = 'assets';
+  static const price = 'price';
+  static const volume = 'volume';
+  static const history = 'history';
+  static const lastTransactions = 'lastTransactions';
+  static const active = 'active';
+  static const change24h = 'change24h';
+  static const change24hRevert = 'change24hRevert';
+  static const viewOnExplorer = 'viewOnExplorer';
+  static const explorerUnavailable = 'explorerUnavailable';
+  static const getRewards = 'getRewards';
+  static const rewardBoxTitle = 'rewardBoxTitle';
+  static const network = 'network';
+  static const rewardBoxSubTitle = 'rewardBoxSubTitle';
+  static const rewardBoxReadMore = 'rewardBoxReadMore';
+  static const claimSuccess = 'claimSuccess';
+  static const noRewards = 'noRewards';
+  static const kmdAmount = 'kmdAmount';
+  static const kmdReward = 'kmdReward';
+  static const kmdRewardSpan1 = 'kmdRewardSpan1';
+  static const timeLeft = 'timeLeft';
+  static const status = 'status';
+  static const complete = 'complete';
+  static const claim = 'claim';
+  static const noTransactionsTitle = 'noTransactionsTitle';
+  static const noTransactionsDescription = 'noTransactionsDescription';
+  static const noClaimableRewards = 'noClaimableRewards';
+  static const amountToSend = 'amountToSend';
+  static const enterAmountToSend = 'enterAmountToSend';
+  static const inferiorSendAmount = 'inferiorSendAmount';
+  static const date = 'date';
+  static const confirmations = 'confirmations';
+  static const blockHeight = 'blockHeight';
+  static const from = 'from';
+  static const to = 'to';
+  static const fromDate = 'fromDate';
+  static const toDate = 'toDate';
+  static const amount = 'amount';
+  static const close = 'close';
+  static const fee = 'fee';
+  static const done = 'done';
+  static const fees = 'fees';
+  static const recipientAddress = 'recipientAddress';
+  static const transactionHash = 'transactionHash';
+  static const transactionFailed = 'transactionFailed';
+  static const hash = 'hash';
+  static const fullHash = 'fullHash';
+  static const coinAddress = 'coinAddress';
+  static const youSend = 'youSend';
+  static const invalidAddress = 'invalidAddress';
+  static const customFeeCoin = 'customFeeCoin';
+  static const customFeeOptional = 'customFeeOptional';
+  static const optional = 'optional';
+  static const showMore = 'showMore';
+  static const settings = 'settings';
+  static const somethingWrong = 'somethingWrong';
+  static const transactionComplete = 'transactionComplete';
+  static const transactionDenied = 'transactionDenied';
+  static const coinDisableSpan1 = 'coinDisableSpan1';
+  static const confirmSending = 'confirmSending';
+  static const confirmSend = 'confirmSend';
+  static const confirm = 'confirm';
+  static const confirmed = 'confirmed';
+  static const ok = 'ok';
+  static const cancel = 'cancel';
+  static const next = 'next';
+  static const continueText = 'continueText';
+  static const accept = 'accept';
+  static const create = 'create';
+  static const import = 'import';
+  static const enterDataToSend = 'enterDataToSend';
+  static const address = 'address';
+  static const request = 'request';
+  static const disable = 'disable';
+  static const usdPrice = 'usdPrice';
+  static const portfolio = 'portfolio';
+  static const editList = 'editList';
+  static const withBalance = 'withBalance';
+  static const hideBalancesTitle = 'hideBalancesTitle';
+  static const hideBalancesSubtitle = 'hideBalancesSubtitle';
+  static const balance = 'balance';
+  static const transactions = 'transactions';
+  static const send = 'send';
+  static const receive = 'receive';
+  static const txInternalTransfer = 'txInternalTransfer';
+  static const receiveGasfreeAddressStatus = 'receiveGasfreeAddressStatus';
+  static const bitrefillGasfreeRefundStatus = 'bitrefillGasfreeRefundStatus';
+  static const bitrefillGasfreeRefundBalanceUnavailable =
+      'bitrefillGasfreeRefundBalanceUnavailable';
+  static const bitrefillGasfreeRefundUnavailable =
+      'bitrefillGasfreeRefundUnavailable';
+  static const receiveGaslessBadgeTitle = 'receiveGaslessBadgeTitle';
+  static const receiveGaslessBadgeSubtitle = 'receiveGaslessBadgeSubtitle';
+  static const receiveGaslessOnlySendToAddress =
+      'receiveGaslessOnlySendToAddress';
+  static const receiveStandardAddressToggle = 'receiveStandardAddressToggle';
+  static const receiveStandardAddressCaveat = 'receiveStandardAddressCaveat';
+  static const receiveStandardAddressLabel = 'receiveStandardAddressLabel';
+  static const receiveStandardBalanceNotice = 'receiveStandardBalanceNotice';
+  static const gaslessStandardBalanceTitle = 'gaslessStandardBalanceTitle';
+  static const gaslessStandardBalanceBody = 'gaslessStandardBalanceBody';
+  static const gaslessStandardBalanceAction = 'gaslessStandardBalanceAction';
+  static const gaslessStandardBalanceNoTrxWarning =
+      'gaslessStandardBalanceNoTrxWarning';
+  static const gaslessInfoTitle = 'gaslessInfoTitle';
+  static const gaslessInfoBodyHow = 'gaslessInfoBodyHow';
+  static const gaslessInfoProviderDependence = 'gaslessInfoProviderDependence';
+  static const gaslessRecoveryTitle = 'gaslessRecoveryTitle';
+  static const gaslessRecoveryBody = 'gaslessRecoveryBody';
+  static const gaslessRecoveryAction = 'gaslessRecoveryAction';
+  static const gaslessSingleAddressTooltip = 'gaslessSingleAddressTooltip';
+  static const addressRowGasfreeTag = 'addressRowGasfreeTag';
+  static const addressRowGasfreeCheckingTag = 'addressRowGasfreeCheckingTag';
+  static const addressRowGasfreePausedTag = 'addressRowGasfreePausedTag';
+  static const receiveGaslessPausedNotice = 'receiveGaslessPausedNotice';
+  static const receiveGaslessBuildDisabledNotice =
+      'receiveGaslessBuildDisabledNotice';
+  static const receiveGaslessSecurityBlockedNotice =
+      'receiveGaslessSecurityBlockedNotice';
+  static const receiveGaslessZeroFeeUnsupportedNotice =
+      'receiveGaslessZeroFeeUnsupportedNotice';
+  static const receiveGaslessProviderUnavailableNotice =
+      'receiveGaslessProviderUnavailableNotice';
+  static const receiveGaslessPendingTransferNotice =
+      'receiveGaslessPendingTransferNotice';
+  static const receiveGaslessTokenUnsupportedNotice =
+      'receiveGaslessTokenUnsupportedNotice';
+  static const receiveGaslessDecimalsMismatchNotice =
+      'receiveGaslessDecimalsMismatchNotice';
+  static const receiveGaslessCustodyMismatchNotice =
+      'receiveGaslessCustodyMismatchNotice';
+  static const receiveGaslessProviderMismatchNotice =
+      'receiveGaslessProviderMismatchNotice';
+  static const receiveGaslessReactivationRequiredNotice =
+      'receiveGaslessReactivationRequiredNotice';
+  static const receiveGaslessAttestationMissingNotice =
+      'receiveGaslessAttestationMissingNotice';
+  static const addressRowStandardTag = 'addressRowStandardTag';
+  static const receiveStandardVariantCaveat = 'receiveStandardVariantCaveat';
+  static const addressBalanceAvailable = 'addressBalanceAvailable';
+  static const faucet = 'faucet';
+  static const reward = 'reward';
+  static const loadingSwap = 'loadingSwap';
+  static const swapDaily = 'swapDaily';
+  static const swapMonthly = 'swapMonthly';
+  static const swapAllTime = 'swapAllTime';
+  static const seed = 'seed';
+  static const wallet = 'wallet';
+  static const logIn = 'logIn';
+  static const logOut = 'logOut';
+  static const logOutGo = 'logOutGo';
+  static const delete = 'delete';
+  static const forget = 'forget';
+  static const seedPhrase = 'seedPhrase';
+  static const assetNumber = 'assetNumber';
+  static const clipBoard = 'clipBoard';
+  static const onboardingConsentPrefix = 'onboardingConsentPrefix';
+  static const onboardingAgreementsUpdated = 'onboardingAgreementsUpdated';
+  static const onboardingAgreementNotice = 'onboardingAgreementNotice';
+  static const onboardingTitle = 'onboardingTitle';
+  static const onboardingSubtitle = 'onboardingSubtitle';
+  static const onboardingCreateWallet = 'onboardingCreateWallet';
+  static const onboardingImportTitle = 'onboardingImportTitle';
+  static const onboardingImportSubtitle = 'onboardingImportSubtitle';
+  static const onboardingHardwareTitle = 'onboardingHardwareTitle';
+  static const onboardingReturningTitle = 'onboardingReturningTitle';
+  static const onboardingReturningSubtitle = 'onboardingReturningSubtitle';
+  static const walletsManagerCreateWalletButton =
+      'walletsManagerCreateWalletButton';
+  static const walletsManagerImportWalletButton =
+      'walletsManagerImportWalletButton';
+  static const walletsManagerStepBuilderCreationWalletError =
+      'walletsManagerStepBuilderCreationWalletError';
+  static const walletCreationTitle = 'walletCreationTitle';
+  static const walletImportTitle = 'walletImportTitle';
+  static const walletImportByFileTitle = 'walletImportByFileTitle';
+  static const invalidWalletNameError = 'invalidWalletNameError';
+  static const invalidWalletFileNameError = 'invalidWalletFileNameError';
+  static const walletImportCreatePasswordTitle =
+      'walletImportCreatePasswordTitle';
+  static const walletImportByFileDescription = 'walletImportByFileDescription';
+  static const walletLogInTitle = 'walletLogInTitle';
+  static const walletCreationNameHint = 'walletCreationNameHint';
+  static const walletCreationPasswordHint = 'walletCreationPasswordHint';
+  static const walletCreationConfirmPasswordHint =
+      'walletCreationConfirmPasswordHint';
+  static const walletCreationConfirmPassword = 'walletCreationConfirmPassword';
+  static const walletCreationUploadFile = 'walletCreationUploadFile';
+  static const walletCreationEmptySeedError = 'walletCreationEmptySeedError';
+  static const walletCreationExistNameError = 'walletCreationExistNameError';
+  static const walletCreationNameLengthError = 'walletCreationNameLengthError';
+  static const walletCreationFormatPasswordError =
+      'walletCreationFormatPasswordError';
+  static const walletCreationConfirmPasswordError =
+      'walletCreationConfirmPasswordError';
+  static const walletCreationNameCharactersError =
+      'walletCreationNameCharactersError';
+  static const renameWalletDescription = 'renameWalletDescription';
+  static const renameWalletConfirm = 'renameWalletConfirm';
+  static const incorrectPassword = 'incorrectPassword';
+  static const oneClickLogin = 'oneClickLogin';
+  static const quickLoginTooltip = 'quickLoginTooltip';
+  static const quickLoginSubtitle = 'quickLoginSubtitle';
+  static const importSeedEnterSeedPhraseHint = 'importSeedEnterSeedPhraseHint';
+  static const passphraseCheckingTitle = 'passphraseCheckingTitle';
+  static const passphraseCheckingDescription = 'passphraseCheckingDescription';
+  static const passphraseCheckingEnterWord = 'passphraseCheckingEnterWord';
+  static const passphraseCheckingEnterWordHint =
+      'passphraseCheckingEnterWordHint';
+  static const back = 'back';
+  static const settingsMenuGeneral = 'settingsMenuGeneral';
+  static const settingsMenuLanguage = 'settingsMenuLanguage';
+  static const settingsMenuSecurity = 'settingsMenuSecurity';
+  static const settingsMenuPrivacy = 'settingsMenuPrivacy';
+  static const settingsMenuKycPolicy = 'settingsMenuKycPolicy';
+  static const settingsMenuAbout = 'settingsMenuAbout';
+  static const seedPhraseSettingControlsViewSeed =
+      'seedPhraseSettingControlsViewSeed';
+  static const seedPhraseSettingControlsDownloadSeed =
+      'seedPhraseSettingControlsDownloadSeed';
+  static const debugSettingsResetActivatedCoins =
+      'debugSettingsResetActivatedCoins';
+  static const debugSettingsDownloadButton = 'debugSettingsDownloadButton';
+  static const or = 'or';
+  static const passwordTitle = 'passwordTitle';
+  static const passwordUpdateCreate = 'passwordUpdateCreate';
+  static const enterThePassword = 'enterThePassword';
+  static const changeThePassword = 'changeThePassword';
+  static const changePasswordSpan1 = 'changePasswordSpan1';
+  static const updatePassword = 'updatePassword';
+  static const passwordHasChanged = 'passwordHasChanged';
+  static const confirmationForShowingSeedPhraseTitle =
+      'confirmationForShowingSeedPhraseTitle';
+  static const saveAndRemember = 'saveAndRemember';
+  static const seedPhraseShowingTitle = 'seedPhraseShowingTitle';
+  static const seedPhraseShowingWarning = 'seedPhraseShowingWarning';
+  static const seedPhraseShowingShowPhrase = 'seedPhraseShowingShowPhrase';
+  static const seedPhraseShowingCopySeed = 'seedPhraseShowingCopySeed';
+  static const seedPhraseShowingSavedPhraseButton =
+      'seedPhraseShowingSavedPhraseButton';
+  static const seedAccessSpan1 = 'seedAccessSpan1';
+  static const backupSeedNotificationTitle = 'backupSeedNotificationTitle';
+  static const backupSeedNotificationDescription =
+      'backupSeedNotificationDescription';
+  static const backupSeedNotificationButton = 'backupSeedNotificationButton';
+  static const swapConfirmationTitle = 'swapConfirmationTitle';
+  static const swapConfirmationYouReceive = 'swapConfirmationYouReceive';
+  static const swapConfirmationYouSending = 'swapConfirmationYouSending';
+  static const tradingDetailsTitleFailed = 'tradingDetailsTitleFailed';
+  static const tradingDetailsTitleCompleted = 'tradingDetailsTitleCompleted';
+  static const tradingDetailsTitleInProgress = 'tradingDetailsTitleInProgress';
+  static const tradingDetailsTitleOrderMatching =
+      'tradingDetailsTitleOrderMatching';
+  static const tradingDetailsTotalSpentTime = 'tradingDetailsTotalSpentTime';
+  static const tradingDetailsTotalSpentTimeWithHours =
+      'tradingDetailsTotalSpentTimeWithHours';
+  static const swapRecoverButtonTitle = 'swapRecoverButtonTitle';
+  static const swapRecoverButtonText = 'swapRecoverButtonText';
+  static const swapRecoverButtonErrorMessage = 'swapRecoverButtonErrorMessage';
+  static const swapRecoverButtonSuccessMessage =
+      'swapRecoverButtonSuccessMessage';
+  static const swapRecoverButtonSubmittingMessage =
+      'swapRecoverButtonSubmittingMessage';
+  static const swapRecoverButtonUncertainMessage =
+      'swapRecoverButtonUncertainMessage';
+  static const swapProgressStatusFailed = 'swapProgressStatusFailed';
+  static const swapDetailsStepStatusFailed = 'swapDetailsStepStatusFailed';
+  static const disclaimerAcceptEulaCheckbox = 'disclaimerAcceptEulaCheckbox';
+  static const disclaimerAcceptTermsAndConditionsCheckbox =
+      'disclaimerAcceptTermsAndConditionsCheckbox';
+  static const swapDetailsStepStatusInProcess =
+      'swapDetailsStepStatusInProcess';
+  static const swapDetailsStepStatusTimeSpent =
+      'swapDetailsStepStatusTimeSpent';
+  static const milliseconds = 'milliseconds';
+  static const seconds = 'seconds';
+  static const minutes = 'minutes';
+  static const hours = 'hours';
+  static const coinAddressDetailsNotificationTitle =
+      'coinAddressDetailsNotificationTitle';
+  static const coinAddressDetailsNotificationDescription =
+      'coinAddressDetailsNotificationDescription';
+  static const swapFeeDetailsPaidFromBalance = 'swapFeeDetailsPaidFromBalance';
+  static const swapFeeDetailsSendCoinTxFee = 'swapFeeDetailsSendCoinTxFee';
+  static const swapFeeDetailsReceiveCoinTxFee =
+      'swapFeeDetailsReceiveCoinTxFee';
+  static const swapFeeDetailsTradingFee = 'swapFeeDetailsTradingFee';
+  static const swapFeeDetailsSendTradingFeeTxFee =
+      'swapFeeDetailsSendTradingFeeTxFee';
+  static const swapFeeDetailsNone = 'swapFeeDetailsNone';
+  static const swapFeeDetailsPaidFromReceivedVolume =
+      'swapFeeDetailsPaidFromReceivedVolume';
+  static const logoutPopupTitle = 'logoutPopupTitle';
+  static const logoutPopupDescriptionWalletOnly =
+      'logoutPopupDescriptionWalletOnly';
+  static const logoutPopupDescription = 'logoutPopupDescription';
+  static const transactionDetailsTitle = 'transactionDetailsTitle';
+  static const customSeedWarningText = 'customSeedWarningText';
+  static const customSeedIUnderstand = 'customSeedIUnderstand';
+  static const walletCreationBip39SeedError = 'walletCreationBip39SeedError';
+  static const walletCreationHdBip39SeedError =
+      'walletCreationHdBip39SeedError';
+  static const walletPageNoSuchAsset = 'walletPageNoSuchAsset';
+  static const swap = 'swap';
+  static const swapAddress = 'swapAddress';
+  static const fiatBalance = 'fiatBalance';
+  static const yourBalance = 'yourBalance';
+  static const all = 'all';
+  static const taker = 'taker';
+  static const maker = 'maker';
+  static const successful = 'successful';
+  static const success = 'success';
+  static const failed = 'failed';
+  static const exchangeCoin = 'exchangeCoin';
+  static const search = 'search';
+  static const searchAssets = 'searchAssets';
+  static const searchCoin = 'searchCoin';
+  static const filters = 'filters';
+  static const sellAsset = 'sellAsset';
+  static const buyAsset = 'buyAsset';
+  static const assetName = 'assetName';
+  static const protocol = 'protocol';
+  static const resetAll = 'resetAll';
+  static const reset = 'reset';
+  static const clearFilter = 'clearFilter';
+  static const addAssets = 'addAssets';
+  static const removeAssets = 'removeAssets';
+  static const selectedAssetsCount = 'selectedAssetsCount';
+  static const clickAssetToAddHint = 'clickAssetToAddHint';
+  static const clickAssetToRemoveHint = 'clickAssetToRemoveHint';
+  static const defaultCoinDisableWarning = 'defaultCoinDisableWarning';
+  static const parentCoinDisableWarning = 'parentCoinDisableWarning';
+  static const coinDisableOpenOrdersWarning = 'coinDisableOpenOrdersWarning';
+  static const supportFrequentlyQuestionSpan = 'supportFrequentlyQuestionSpan';
+  static const support = 'support';
+  static const supportInfoTitle1 = 'supportInfoTitle1';
+  static const supportInfoContent1 = 'supportInfoContent1';
+  static const supportInfoTitle2 = 'supportInfoTitle2';
+  static const supportInfoContent2 = 'supportInfoContent2';
+  static const supportInfoTitle3 = 'supportInfoTitle3';
+  static const supportInfoContent3 = 'supportInfoContent3';
+  static const supportInfoTitle4 = 'supportInfoTitle4';
+  static const supportInfoContent4 = 'supportInfoContent4';
+  static const supportInfoTitle5 = 'supportInfoTitle5';
+  static const supportInfoContent5 = 'supportInfoContent5';
+  static const supportInfoTitle6 = 'supportInfoTitle6';
+  static const supportInfoContent6 = 'supportInfoContent6';
+  static const supportInfoTitle7 = 'supportInfoTitle7';
+  static const supportInfoContent7 = 'supportInfoContent7';
+  static const supportInfoTitle8 = 'supportInfoTitle8';
+  static const supportInfoContent8 = 'supportInfoContent8';
+  static const supportInfoTitle9 = 'supportInfoTitle9';
+  static const supportInfoContent9 = 'supportInfoContent9';
+  static const supportInfoTitle10 = 'supportInfoTitle10';
+  static const supportInfoContent10 = 'supportInfoContent10';
+  static const supportInfoTitle11 = 'supportInfoTitle11';
+  static const supportInfoContent11 = 'supportInfoContent11';
+  static const supportDiscordButton = 'supportDiscordButton';
+  static const supportAskSpan = 'supportAskSpan';
+  static const fiat = 'fiat';
+  static const bridge = 'bridge';
+  static const apply = 'apply';
+  static const makerOrder = 'makerOrder';
+  static const takerOrder = 'takerOrder';
+  static const buyPrice = 'buyPrice';
+  static const inProgress = 'inProgress';
+  static const orders = 'orders';
+  static const percentFilled = 'percentFilled';
+  static const orderType = 'orderType';
+  static const recover = 'recover';
+  static const cancelAll = 'cancelAll';
+  static const type = 'type';
+  static const sell = 'sell';
+  static const sellCrypto = 'sellCrypto';
+  static const sellCryptoDescription = 'sellCryptoDescription';
+  static const buy = 'buy';
+  static const changingWalletPassword = 'changingWalletPassword';
+  static const changingWalletPasswordDescription =
+      'changingWalletPasswordDescription';
+  static const dark = 'dark';
+  static const darkMode = 'darkMode';
+  static const light = 'light';
+  static const lightMode = 'lightMode';
+  static const defaultText = 'defaultText';
+  static const clear = 'clear';
+  static const remove = 'remove';
+  static const newText = 'newText';
+  static const whatsNew = 'whatsNew';
+  static const remindLater = 'remindLater';
+  static const updateNow = 'updateNow';
+  static const updatePopupTitle = 'updatePopupTitle';
+  static const activationFailedMessage = 'activationFailedMessage';
+  static const retryButtonText = 'retryButtonText';
+  static const reloadButtonText = 'reloadButtonText';
+  static const feedbackFormTitle = 'feedbackFormTitle';
+  static const feedbackFormDescription = 'feedbackFormDescription';
+  static const feedbackFormThanksTitle = 'feedbackFormThanksTitle';
+  static const feedbackFormThanksDescription = 'feedbackFormThanksDescription';
+  static const feedbackFormKindQuestion = 'feedbackFormKindQuestion';
+  static const feedbackFormDescribeTitle = 'feedbackFormDescribeTitle';
+  static const feedbackFormContactRequired = 'feedbackFormContactRequired';
+  static const feedbackFormContactOptional = 'feedbackFormContactOptional';
+  static const feedbackFormMessageHint = 'feedbackFormMessageHint';
+  static const feedbackFormBugReport = 'feedbackFormBugReport';
+  static const feedbackFormFeatureRequest = 'feedbackFormFeatureRequest';
+  static const feedbackFormSupportRequest = 'feedbackFormSupportRequest';
+  static const feedbackFormOther = 'feedbackFormOther';
+  static const feedbackFormDiscord = 'feedbackFormDiscord';
+  static const feedbackFormMatrix = 'feedbackFormMatrix';
+  static const feedbackFormTelegram = 'feedbackFormTelegram';
+  static const feedbackFormSelectContactMethod =
+      'feedbackFormSelectContactMethod';
+  static const feedbackSelectTypeValidation = 'feedbackSelectTypeValidation';
+  static const feedbackFormDiscordHint = 'feedbackFormDiscordHint';
+  static const feedbackFormMatrixHint = 'feedbackFormMatrixHint';
+  static const feedbackFormTelegramHint = 'feedbackFormTelegramHint';
+  static const feedbackFormEmailHint = 'feedbackFormEmailHint';
+  static const feedbackFormContactHint = 'feedbackFormContactHint';
+  static const feedbackFormContactOptOut = 'feedbackFormContactOptOut';
+  static const email = 'email';
+  static const emailValidatorError = 'emailValidatorError';
+  static const contactRequiredError = 'contactRequiredError';
+  static const contactDetailsMaxLengthError = 'contactDetailsMaxLengthError';
+  static const discordUsernameValidatorError = 'discordUsernameValidatorError';
+  static const telegramUsernameValidatorError =
+      'telegramUsernameValidatorError';
+  static const matrixIdValidatorError = 'matrixIdValidatorError';
+  static const myCoinsMissing = 'myCoinsMissing';
+  static const myCoinsMissingReassurance = 'myCoinsMissingReassurance';
+  static const myCoinsMissingToRecover = 'myCoinsMissingToRecover';
+  static const myCoinsMissingSteps = 'myCoinsMissingSteps';
+  static const myCoinsMissingMoreInfo = 'myCoinsMissingMoreInfo';
+  static const myCoinsMissingHelp = 'myCoinsMissingHelp';
+  static const myCoinsMissingSignIn = 'myCoinsMissingSignIn';
+  static const feedbackValidatorEmptyError = 'feedbackValidatorEmptyError';
+  static const feedbackValidatorMaxLengthError =
+      'feedbackValidatorMaxLengthError';
+  static const yourFeedback = 'yourFeedback';
+  static const sendFeedback = 'sendFeedback';
+  static const sendFeedbackError = 'sendFeedbackError';
+  static const addMoreFeedback = 'addMoreFeedback';
+  static const closePopup = 'closePopup';
+  static const exchange = 'exchange';
+  static const connectSomething = 'connectSomething';
+  static const hardwareWallet = 'hardwareWallet';
+  static const metamask = 'metamask';
+  static const comingSoon = 'comingSoon';
+  static const walletsTypeListTitle = 'walletsTypeListTitle';
+  static const seedPhraseMakeSureBody = 'seedPhraseMakeSureBody';
+  static const seedPhraseSuccessTitle = 'seedPhraseSuccessTitle';
+  static const seedPhraseSuccessBody = 'seedPhraseSuccessBody';
+  static const seedPhraseGotIt = 'seedPhraseGotIt';
+  static const viewSeedPhrase = 'viewSeedPhrase';
+  static const backupSeedPhrase = 'backupSeedPhrase';
+  static const seedOr = 'seedOr';
+  static const seedDownload = 'seedDownload';
+  static const seedIntroWarning = 'seedIntroWarning';
+  static const seedSettings = 'seedSettings';
+  static const errorDescription = 'errorDescription';
+  static const tryAgain = 'tryAgain';
+  static const errorTryAgainSupportHint = 'errorTryAgainSupportHint';
+  static const customFeesWarning = 'customFeesWarning';
+  static const fiatExchange = 'fiatExchange';
+  static const bridgeExchange = 'bridgeExchange';
+  static const noTxSupportHidden = 'noTxSupportHidden';
+  static const deleteWalletTitle = 'deleteWalletTitle';
+  static const deleteWalletInfo = 'deleteWalletInfo';
+  static const trezorEnterPinTitle = 'trezorEnterPinTitle';
+  static const trezorEnterPinHint = 'trezorEnterPinHint';
+  static const trezorInProgressTitle = 'trezorInProgressTitle';
+  static const trezorInProgressHint = 'trezorInProgressHint';
+  static const trezorErrorBusy = 'trezorErrorBusy';
+  static const trezorErrorInvalidPin = 'trezorErrorInvalidPin';
+  static const trezorSelectTitle = 'trezorSelectTitle';
+  static const trezorSelectSubTitle = 'trezorSelectSubTitle';
+  static const trezorWalletOnlyTooltip = 'trezorWalletOnlyTooltip';
+  static const trezorWalletOnlyNotice = 'trezorWalletOnlyNotice';
+  static const trezorBrowserUnsupported = 'trezorBrowserUnsupported';
+  static const trezorTransactionInProgressMessage =
+      'trezorTransactionInProgressMessage';
+  static const trezorInitializingMessage = 'trezorInitializingMessage';
+  static const trezorWaitingForDeviceMessage = 'trezorWaitingForDeviceMessage';
+  static const trezorAwaitingConfirmationMessage =
+      'trezorAwaitingConfirmationMessage';
+  static const trezorPinRequiredMessage = 'trezorPinRequiredMessage';
+  static const trezorPassphraseRequiredMessage =
+      'trezorPassphraseRequiredMessage';
+  static const trezorAuthFailedMessage = 'trezorAuthFailedMessage';
+  static const trezorAuthCancelledMessage = 'trezorAuthCancelledMessage';
+  static const trezorInitializationFailed = 'trezorInitializationFailed';
+  static const trezorNoTaskIdFound = 'trezorNoTaskIdFound';
+  static const trezorProvidePinFailed = 'trezorProvidePinFailed';
+  static const trezorProvidePassphraseFailed = 'trezorProvidePassphraseFailed';
+  static const mixedCaseError = 'mixedCaseError';
+  static const addressConvertedToMixedCase = 'addressConvertedToMixedCase';
+  static const invalidAddressChecksum = 'invalidAddressChecksum';
+  static const notEnoughBalance = 'notEnoughBalance';
+  static const pleaseInputData = 'pleaseInputData';
+  static const customFeeHigherAmount = 'customFeeHigherAmount';
+  static const noSenderAddress = 'noSenderAddress';
+  static const confirmOnTrezor = 'confirmOnTrezor';
+  static const walletImportNameTaken = 'walletImportNameTaken';
+  static const seedBackupGateTitle = 'seedBackupGateTitle';
+  static const seedBackupGateGeneratedBody = 'seedBackupGateGeneratedBody';
+  static const seedBackupGateBody = 'seedBackupGateBody';
+  static const seedBackupGateBackUpNow = 'seedBackupGateBackUpNow';
+  static const seedBackupGateImportInstead = 'seedBackupGateImportInstead';
+  static const seedBackupGateContinueAnyway = 'seedBackupGateContinueAnyway';
+  static const seedBackupGateShowAddress = 'seedBackupGateShowAddress';
+  static const sendToAnalytics = 'sendToAnalytics';
+  static const backToWallet = 'backToWallet';
+  static const backToDex = 'backToDex';
+  static const backToBridge = 'backToBridge';
+  static const scanToGetAddress = 'scanToGetAddress';
+  static const listIsEmpty = 'listIsEmpty';
+  static const setMax = 'setMax';
+  static const setMin = 'setMin';
+  static const timeout = 'timeout';
+  static const notEnoughBalanceForGasError = 'notEnoughBalanceForGasError';
+  static const cannotSendToSelf = 'cannotSendToSelf';
+  static const notEnoughFundsError = 'notEnoughFundsError';
+  static const dexErrorMessage = 'dexErrorMessage';
+  static const dexUnableToStartSwap = 'dexUnableToStartSwap';
+  static const seedConfirmInitialText = 'seedConfirmInitialText';
+  static const seedConfirmIncorrectText = 'seedConfirmIncorrectText';
+  static const mnemonicInvalidWordError = 'mnemonicInvalidWordError';
+  static const mnemonicInvalidChecksumError = 'mnemonicInvalidChecksumError';
+  static const mnemonicInvalidLengthError = 'mnemonicInvalidLengthError';
+  static const usedSamePassword = 'usedSamePassword';
+  static const passwordNotAccepted = 'passwordNotAccepted';
+  static const confirmNewPassword = 'confirmNewPassword';
+  static const enterNewPassword = 'enterNewPassword';
+  static const currentPassword = 'currentPassword';
+  static const walletNotFound = 'walletNotFound';
+  static const passwordIsEmpty = 'passwordIsEmpty';
+  static const passwordContainsTheWordPassword =
+      'passwordContainsTheWordPassword';
+  static const passwordTooShort = 'passwordTooShort';
+  static const passwordTooLong = 'passwordTooLong';
+  static const passwordMissingDigit = 'passwordMissingDigit';
+  static const passwordMissingLowercase = 'passwordMissingLowercase';
+  static const passwordMissingUppercase = 'passwordMissingUppercase';
+  static const passwordMissingSpecialCharacter =
+      'passwordMissingSpecialCharacter';
+  static const passwordConsecutiveCharacters = 'passwordConsecutiveCharacters';
+  static const passwordSecurity = 'passwordSecurity';
+  static const allowWeakPassword = 'allowWeakPassword';
+  static const allowWeakPasswordDescription = 'allowWeakPasswordDescription';
+  static const dexBalanceNotSufficientError = 'dexBalanceNotSufficientError';
+  static const dexEnterPriceError = 'dexEnterPriceError';
+  static const dexZeroPriceError = 'dexZeroPriceError';
+  static const dexSelectBuyCoinError = 'dexSelectBuyCoinError';
+  static const dexSelectSellCoinError = 'dexSelectSellCoinError';
+  static const dexCoinSuspendedError = 'dexCoinSuspendedError';
+  static const dexEnterBuyAmountError = 'dexEnterBuyAmountError';
+  static const dexEnterSellAmountError = 'dexEnterSellAmountError';
+  static const dexZeroBuyAmountError = 'dexZeroBuyAmountError';
+  static const dexZeroSellAmountError = 'dexZeroSellAmountError';
+  static const dexMaxSellAmountError = 'dexMaxSellAmountError';
+  static const dexMaxOrderVolume = 'dexMaxOrderVolume';
+  static const dexMinSellAmountError = 'dexMinSellAmountError';
+  static const dexMaxOrderVolumeError = 'dexMaxOrderVolumeError';
+  static const dexInsufficientFundsError = 'dexInsufficientFundsError';
+  static const dexTradingWithSelfError = 'dexTradingWithSelfError';
+  static const bridgeSelectSendProtocolError = 'bridgeSelectSendProtocolError';
+  static const bridgeSelectFromProtocolError = 'bridgeSelectFromProtocolError';
+  static const bridgeSelectTokenFirstError = 'bridgeSelectTokenFirstError';
+  static const bridgeEnterSendAmountError = 'bridgeEnterSendAmountError';
+  static const bridgeZeroSendAmountError = 'bridgeZeroSendAmountError';
+  static const bridgeMaxSendAmountError = 'bridgeMaxSendAmountError';
+  static const bridgeMinOrderAmountError = 'bridgeMinOrderAmountError';
+  static const bridgeMaxOrderAmountError = 'bridgeMaxOrderAmountError';
+  static const bridgeInsufficientBalanceError =
+      'bridgeInsufficientBalanceError';
+  static const lowTradeVolumeError = 'lowTradeVolumeError';
+  static const bridgeSelectReceiveCoinError = 'bridgeSelectReceiveCoinError';
+  static const withdrawNoParentCoinError = 'withdrawNoParentCoinError';
+  static const withdrawNotEnoughBalanceForGasError =
+      'withdrawNotEnoughBalanceForGasError';
+  static const withdrawNotSufficientBalanceError =
+      'withdrawNotSufficientBalanceError';
+  static const withdrawZeroBalanceError = 'withdrawZeroBalanceError';
+  static const withdrawAmountTooLowError = 'withdrawAmountTooLowError';
+  static const withdrawInvalidAmountError = 'withdrawInvalidAmountError';
+  static const withdrawNoSuchCoinError = 'withdrawNoSuchCoinError';
+  static const withdrawPreview = 'withdrawPreview';
+  static const withdrawPreviewZhtlcNote = 'withdrawPreviewZhtlcNote';
+  static const withdrawPreviewError = 'withdrawPreviewError';
+  static const withdrawNoResultError = 'withdrawNoResultError';
+  static const withdrawDestination = 'withdrawDestination';
+  static const withdrawNetworkDetails = 'withdrawNetworkDetails';
+  static const withdrawHighFee = 'withdrawHighFee';
+  static const withdrawPreviewExpiresIn = 'withdrawPreviewExpiresIn';
+  static const withdrawPreviewRefreshing = 'withdrawPreviewRefreshing';
+  static const withdrawTronBandwidthUsed = 'withdrawTronBandwidthUsed';
+  static const withdrawTronBandwidthFee = 'withdrawTronBandwidthFee';
+  static const withdrawTronBandwidthSource = 'withdrawTronBandwidthSource';
+  static const withdrawTronEnergyUsed = 'withdrawTronEnergyUsed';
+  static const withdrawTronEnergyFee = 'withdrawTronEnergyFee';
+  static const withdrawTronEnergySource = 'withdrawTronEnergySource';
+  static const withdrawTronAccountActivationFee =
+      'withdrawTronAccountActivationFee';
+  static const withdrawTronFeeSummary = 'withdrawTronFeeSummary';
+  static const withdrawTronFeePaidIn = 'withdrawTronFeePaidIn';
+  static const withdrawTronBandwidthCovered = 'withdrawTronBandwidthCovered';
+  static const withdrawTronEnergyCovered = 'withdrawTronEnergyCovered';
+  static const withdrawTronResourceNotUsed = 'withdrawTronResourceNotUsed';
+  static const withdrawTronFeeSummaryCharged = 'withdrawTronFeeSummaryCharged';
+  static const withdrawTronFeeSummaryCovered = 'withdrawTronFeeSummaryCovered';
+  static const withdrawTronPreviewExpired = 'withdrawTronPreviewExpired';
+  static const withdrawTronPreviewRefreshFailed =
+      'withdrawTronPreviewRefreshFailed';
+  static const withdrawTronPreviewRegenerate = 'withdrawTronPreviewRegenerate';
+  static const withdrawAwaitingConfirmations = 'withdrawAwaitingConfirmations';
+  static const withdrawGaslessBadge = 'withdrawGaslessBadge';
+  static const withdrawGaslessNetworkDetails = 'withdrawGaslessNetworkDetails';
+  static const withdrawGaslessProvider = 'withdrawGaslessProvider';
+  static const withdrawGaslessTransferFee = 'withdrawGaslessTransferFee';
+  static const withdrawGaslessActivationFee = 'withdrawGaslessActivationFee';
+  static const withdrawGaslessTotalFee = 'withdrawGaslessTotalFee';
+  static const withdrawGaslessMaxFee = 'withdrawGaslessMaxFee';
+  static const withdrawGaslessFinalFee = 'withdrawGaslessFinalFee';
+  static const withdrawGaslessConfirmationTime =
+      'withdrawGaslessConfirmationTime';
+  static const withdrawGaslessConfirmationBlock =
+      'withdrawGaslessConfirmationBlock';
+  static const withdrawGaslessFeeSummary = 'withdrawGaslessFeeSummary';
+  static const withdrawGaslessUnavailableBlocked =
+      'withdrawGaslessUnavailableBlocked';
+  static const withdrawGaslessSourceAddress = 'withdrawGaslessSourceAddress';
+  static const withdrawSendFrom = 'withdrawSendFrom';
+  static const withdrawSourceGasfreeEntry = 'withdrawSourceGasfreeEntry';
+  static const withdrawSourceStandardEntry = 'withdrawSourceStandardEntry';
+  static const withdrawGaslessInsufficientBalance =
+      'withdrawGaslessInsufficientBalance';
+  static const withdrawGaslessInsufficientBalanceGeneric =
+      'withdrawGaslessInsufficientBalanceGeneric';
+  static const withdrawGaslessInsufficientGasFreeBalance =
+      'withdrawGaslessInsufficientGasFreeBalance';
+  static const withdrawGaslessInsufficientGasFreeBalanceForActivation =
+      'withdrawGaslessInsufficientGasFreeBalanceForActivation';
+  static const withdrawGaslessNoSourceAddress =
+      'withdrawGaslessNoSourceAddress';
+  static const withdrawGaslessRailChip = 'withdrawGaslessRailChip';
+  static const withdrawGaslessRailChipWithFee =
+      'withdrawGaslessRailChipWithFee';
+  static const withdrawAdvancedSection = 'withdrawAdvancedSection';
+  static const withdrawNativeSendToggle = 'withdrawNativeSendToggle';
+  static const withdrawNativeSendToggleSubtitle =
+      'withdrawNativeSendToggleSubtitle';
+  static const withdrawNativeSendActive = 'withdrawNativeSendActive';
+  static const withdrawGaslessTrezorNotice = 'withdrawGaslessTrezorNotice';
+  static const withdrawGaslessActivationBanner =
+      'withdrawGaslessActivationBanner';
+  static const withdrawGaslessActivationBannerGeneric =
+      'withdrawGaslessActivationBannerGeneric';
+  static const withdrawGaslessAmountExceedsMax =
+      'withdrawGaslessAmountExceedsMax';
+  static const withdrawGaslessBalanceBelowFees =
+      'withdrawGaslessBalanceBelowFees';
+  static const withdrawGaslessSendableLabel = 'withdrawGaslessSendableLabel';
+  static const withdrawGaslessTotalBalance = 'withdrawGaslessTotalBalance';
+  static const withdrawGaslessSpendableBalance =
+      'withdrawGaslessSpendableBalance';
+  static const withdrawGaslessPendingLockedBalance =
+      'withdrawGaslessPendingLockedBalance';
+  static const withdrawGaslessProviderUnavailable =
+      'withdrawGaslessProviderUnavailable';
+  static const withdrawGaslessUnsupported = 'withdrawGaslessUnsupported';
+  static const withdrawGaslessReactivationRequired =
+      'withdrawGaslessReactivationRequired';
+  static const withdrawGaslessSecurityMismatch =
+      'withdrawGaslessSecurityMismatch';
+  static const withdrawNoFundedAddresses = 'withdrawNoFundedAddresses';
+  static const withdrawTronNativeNeedsTrx = 'withdrawTronNativeNeedsTrx';
+  static const withdrawGaslessPendingTransfer =
+      'withdrawGaslessPendingTransfer';
+  static const withdrawRecipientGets = 'withdrawRecipientGets';
+  static const withdrawGaslessStatusSubmitting =
+      'withdrawGaslessStatusSubmitting';
+  static const withdrawGaslessStatusAwaitingRelay =
+      'withdrawGaslessStatusAwaitingRelay';
+  static const withdrawGaslessStatusSubmitted =
+      'withdrawGaslessStatusSubmitted';
+  static const withdrawGaslessStatusConfirmingOnChain =
+      'withdrawGaslessStatusConfirmingOnChain';
+  static const withdrawGaslessStatusUnknown = 'withdrawGaslessStatusUnknown';
+  static const withdrawGaslessStatusAcceptanceUnknown =
+      'withdrawGaslessStatusAcceptanceUnknown';
+  static const withdrawGaslessPendingTitle = 'withdrawGaslessPendingTitle';
+  static const withdrawGaslessPendingDescription =
+      'withdrawGaslessPendingDescription';
+  static const withdrawGaslessAcceptanceUnknownTitle =
+      'withdrawGaslessAcceptanceUnknownTitle';
+  static const withdrawGaslessAcceptanceUnknownDescription =
+      'withdrawGaslessAcceptanceUnknownDescription';
+  static const withdrawGaslessContinueChecking =
+      'withdrawGaslessContinueChecking';
+  static const withdrawGaslessUseStandard = 'withdrawGaslessUseStandard';
+  static const withdrawGaslessViewActivity = 'withdrawGaslessViewActivity';
+  static const withdrawGaslessTraceId = 'withdrawGaslessTraceId';
+  static const withdrawGaslessSupportDiagnosticsTitle =
+      'withdrawGaslessSupportDiagnosticsTitle';
+  static const withdrawGaslessSupportDiagnosticsBody =
+      'withdrawGaslessSupportDiagnosticsBody';
+  static const withdrawGaslessSupportDiagnosticsAction =
+      'withdrawGaslessSupportDiagnosticsAction';
+  static const withdrawGaslessStorageUnavailable =
+      'withdrawGaslessStorageUnavailable';
+  static const withdrawGaslessClearRecoveryAction =
+      'withdrawGaslessClearRecoveryAction';
+  static const withdrawGaslessClearRecoveryTitle =
+      'withdrawGaslessClearRecoveryTitle';
+  static const withdrawGaslessClearRecoveryWarning =
+      'withdrawGaslessClearRecoveryWarning';
+  static const withdrawGaslessClearRecoveryAcknowledgement =
+      'withdrawGaslessClearRecoveryAcknowledgement';
+  static const withdrawGaslessClearRecoverySubmittedAt =
+      'withdrawGaslessClearRecoverySubmittedAt';
+  static const withdrawGaslessClearRecoveryFailed =
+      'withdrawGaslessClearRecoveryFailed';
+  static const gaslessConsolidationTitle = 'gaslessConsolidationTitle';
+  static const gaslessConsolidationBody = 'gaslessConsolidationBody';
+  static const gaslessConsolidationFeeNotice = 'gaslessConsolidationFeeNotice';
+  static const gaslessConsolidationComplete = 'gaslessConsolidationComplete';
+  static const gaslessConsolidationEmpty = 'gaslessConsolidationEmpty';
+  static const gaslessConsolidationDestination =
+      'gaslessConsolidationDestination';
+  static const gaslessConsolidationTokenBalance =
+      'gaslessConsolidationTokenBalance';
+  static const gaslessConsolidationTrxBalance =
+      'gaslessConsolidationTrxBalance';
+  static const gaslessConsolidationTokenFrozen =
+      'gaslessConsolidationTokenFrozen';
+  static const gaslessConsolidationNeedsTrx = 'gaslessConsolidationNeedsTrx';
+  static const gaslessConsolidationFeeEstimate =
+      'gaslessConsolidationFeeEstimate';
+  static const gaslessConsolidationFeeShortfall =
+      'gaslessConsolidationFeeShortfall';
+  static const gaslessConsolidationPreflightUnavailable =
+      'gaslessConsolidationPreflightUnavailable';
+  static const gaslessConsolidationSourceComplete =
+      'gaslessConsolidationSourceComplete';
+  static const gaslessConsolidationMoveSource =
+      'gaslessConsolidationMoveSource';
+  static const gaslessConsolidationLoadError = 'gaslessConsolidationLoadError';
+  static const withdrawGaslessAvailabilityUnknown =
+      'withdrawGaslessAvailabilityUnknown';
+  static const withdrawGaslessRelayHint = 'withdrawGaslessRelayHint';
+  static const withdrawGaslessIrreversibleWarning =
+      'withdrawGaslessIrreversibleWarning';
+  static const withdrawGaslessCheckingAvailability =
+      'withdrawGaslessCheckingAvailability';
+  static const withdrawFullAmountFeeNotice = 'withdrawFullAmountFeeNotice';
+  static const withdrawAmountMaximum = 'withdrawAmountMaximum';
+  static const withdrawAvailableLabel = 'withdrawAvailableLabel';
+  static const withdrawTotalDeducted = 'withdrawTotalDeducted';
+  static const withdrawGaslessConfirmedOnChain =
+      'withdrawGaslessConfirmedOnChain';
+  static const txHistoryFetchError = 'txHistoryFetchError';
+  static const txHistoryNoTransactions = 'txHistoryNoTransactions';
+  static const maxGapLimitReached = 'maxGapLimitReached';
+  static const maxAddressesReached = 'maxAddressesReached';
+  static const missingDerivationPath = 'missingDerivationPath';
+  static const protocolNotSupported = 'protocolNotSupported';
+  static const derivationModeNotSupported = 'derivationModeNotSupported';
+  static const hdWalletModeSwitchTitle = 'hdWalletModeSwitchTitle';
+  static const hdWalletModeSwitchSubtitle = 'hdWalletModeSwitchSubtitle';
+  static const hdWalletModeSwitchTooltip = 'hdWalletModeSwitchTooltip';
+  static const multiAddressWalletNoticeTitle = 'multiAddressWalletNoticeTitle';
+  static const multiAddressWalletNoticeDescription =
+      'multiAddressWalletNoticeDescription';
+  static const noActiveWallet = 'noActiveWallet';
+  static const memo = 'memo';
+  static const gasPriceGwei = 'gasPriceGwei';
+  static const gasLimit = 'gasLimit';
+  static const memoOptional = 'memoOptional';
+  static const convert = 'convert';
+  static const youClaimed = 'youClaimed';
+  static const successClaim = 'successClaim';
+  static const rewardProcessingShort = 'rewardProcessingShort';
+  static const rewardProcessingLong = 'rewardProcessingLong';
+  static const rewardLessThanTenLong = 'rewardLessThanTenLong';
+  static const rewardOneHourNotPassedShort = 'rewardOneHourNotPassedShort';
+  static const rewardOneHourNotPassedLong = 'rewardOneHourNotPassedLong';
+  static const comparedToCexTitle = 'comparedToCexTitle';
+  static const comparedToCexInfo = 'comparedToCexInfo';
+  static const makeOrder = 'makeOrder';
+  static const nothingFound = 'nothingFound';
+  static const half = 'half';
+  static const max = 'max';
+  static const exact = 'exact';
+  static const reactivating = 'reactivating';
+  static const weFailedCoinActivate = 'weFailedCoinActivate';
+  static const failedActivate = 'failedActivate';
+  static const pleaseTryActivateAssets = 'pleaseTryActivateAssets';
+  static const makerOrderDetails = 'makerOrderDetails';
+  static const cancelled = 'cancelled';
+  static const fulfilled = 'fulfilled';
+  static const cancelledInsufficientBalance = 'cancelledInsufficientBalance';
+  static const orderId = 'orderId';
+  static const details = 'details';
+  static const orderBook = 'orderBook';
+  static const orderBookFailedLoadError = 'orderBookFailedLoadError';
+  static const orderBookNoAsks = 'orderBookNoAsks';
+  static const orderBookNoBids = 'orderBookNoBids';
+  static const orderBookEmpty = 'orderBookEmpty';
+  static const dexNoSwapOffers = 'dexNoSwapOffers';
+  static const bridgeNoCrossNetworkRoutes = 'bridgeNoCrossNetworkRoutes';
+  static const freshAddress = 'freshAddress';
+  static const userActionRequired = 'userActionRequired';
+  static const unknown = 'unknown';
+  static const unableToActiveCoin = 'unableToActiveCoin';
+  static const coinIsNotActive = 'coinIsNotActive';
+  static const feedback = 'feedback';
+  static const feedbackDefaultType = 'feedbackDefaultType';
+  static const feedbackViewTitle = 'feedbackViewTitle';
+  static const feedbackPageDescription = 'feedbackPageDescription';
+  static const feedbackThankyou = 'feedbackThankyou';
+  static const feedbackError = 'feedbackError';
+  static const selectAToken = 'selectAToken';
+  static const selectToken = 'selectToken';
+  static const rate = 'rate';
+  static const totalFees = 'totalFees';
+  static const selectProtocol = 'selectProtocol';
+  static const showSwapData = 'showSwapData';
+  static const exportSwapData = 'exportSwapData';
+  static const orderUuid = 'orderUuid';
+  static const swapUuid = 'swapUuid';
+  static const importSwaps = 'importSwaps';
+  static const changeTheme = 'changeTheme';
+  static const available = 'available';
+  static const availableForSwaps = 'availableForSwaps';
+  static const swapNow = 'swapNow';
+  static const passphrase = 'passphrase';
+  static const enterPassphraseHiddenWalletTitle =
+      'enterPassphraseHiddenWalletTitle';
+  static const enterPassphraseHiddenWalletDescription =
+      'enterPassphraseHiddenWalletDescription';
+  static const skip = 'skip';
+  static const activateToSeeFunds = 'activateToSeeFunds';
+  static const useCustomSeedOrWif = 'useCustomSeedOrWif';
+  static const cancelOrder = 'cancelOrder';
+  static const version = 'version';
+  static const buildDate = 'buildDate';
+  static const copyAddressToClipboard = 'copyAddressToClipboard';
+  static const copiedAddressToClipboard = 'copiedAddressToClipboard';
+  static const copyUuid = 'copyUuid';
+  static const copiedUuidToClipboard = 'copiedUuidToClipboard';
+  static const createdAt = 'createdAt';
+  static const coin = 'coin';
+  static const token = 'token';
+  static const matching = 'matching';
+  static const matched = 'matched';
+  static const ongoing = 'ongoing';
+  static const manageAnalytics = 'manageAnalytics';
+  static const logs = 'logs';
+  static const resetActivatedCoinsTitle = 'resetActivatedCoinsTitle';
+  static const privateKeys = 'privateKeys';
+  static const exportPrivateKeys = 'exportPrivateKeys';
+  static const exportPrivateKeysDescription = 'exportPrivateKeysDescription';
+  static const privateKeyExportTitle = 'privateKeyExportTitle';
+  static const privateKeyExportDescription = 'privateKeyExportDescription';
+  static const showPrivateKeys = 'showPrivateKeys';
+  static const copyAllKeys = 'copyAllKeys';
+  static const downloadAllKeys = 'downloadAllKeys';
+  static const shareAllKeys = 'shareAllKeys';
+  static const confirmPrivateKeyBackup = 'confirmPrivateKeyBackup';
+  static const confirmPrivateKeyBackupDescription =
+      'confirmPrivateKeyBackupDescription';
+  static const importantSecurityNotice = 'importantSecurityNotice';
+  static const privateKeySecurityWarning = 'privateKeySecurityWarning';
+  static const privateKeyBackupConfirmation = 'privateKeyBackupConfirmation';
+  static const confirmBackupComplete = 'confirmBackupComplete';
+  static const privateKeyExportSuccessTitle = 'privateKeyExportSuccessTitle';
+  static const privateKeyExportSuccessDescription =
+      'privateKeyExportSuccessDescription';
+  static const iHaveSavedMyPrivateKeys = 'iHaveSavedMyPrivateKeys';
+  static const copyWarning = 'copyWarning';
+  static const seedConfirmTitle = 'seedConfirmTitle';
+  static const seedConfirmDescription = 'seedConfirmDescription';
+  static const standardWallet = 'standardWallet';
+  static const noPassphrase = 'noPassphrase';
+  static const passphraseRequired = 'passphraseRequired';
+  static const hiddenWallet = 'hiddenWallet';
+  static const accessHiddenWallet = 'accessHiddenWallet';
+  static const passphraseIsEmpty = 'passphraseIsEmpty';
+  static const selectWalletType = 'selectWalletType';
+  static const walletImportTypeHdLabel = 'walletImportTypeHdLabel';
+  static const walletImportTypeHdDescription = 'walletImportTypeHdDescription';
+  static const walletImportTypeLegacyLabel = 'walletImportTypeLegacyLabel';
+  static const walletImportTypeLegacyDescription =
+      'walletImportTypeLegacyDescription';
+  static const walletImportTypeHdDisabledHint =
+      'walletImportTypeHdDisabledHint';
+  static const trezorNoAddresses = 'trezorNoAddresses';
+  static const trezorImportFailed = 'trezorImportFailed';
+  static const faucetFailureTitle = 'faucetFailureTitle';
+  static const faucetLoadingTitle = 'faucetLoadingTitle';
+  static const faucetLoadingMessage = 'faucetLoadingMessage';
+  static const faucetLoadingSubtitle = 'faucetLoadingSubtitle';
+  static const faucetInitialTitle = 'faucetInitialTitle';
+  static const faucetUnknownErrorMessage = 'faucetUnknownErrorMessage';
+  static const faucetLinkToTransaction = 'faucetLinkToTransaction';
+  static const nfts = 'nfts';
+  static const nft = 'nft';
+  static const blockchain = 'blockchain';
+  static const nItems = 'nItems';
+  static const nNetworks = 'nNetworks';
+  static const receiveNft = 'receiveNft';
+  static const yourCollectibles = 'yourCollectibles';
+  static const transactionsHistory = 'transactionsHistory';
+  static const transactionsEmptyTitle = 'transactionsEmptyTitle';
+  static const transactionsEmptyDescription = 'transactionsEmptyDescription';
+  static const transactionsNoLoginCAT = 'transactionsNoLoginCAT';
+  static const loadingError = 'loadingError';
+  static const legalDocumentLoadError = 'legalDocumentLoadError';
+  static const tryAgainButton = 'tryAgainButton';
+  static const contractAddress = 'contractAddress';
+  static const tokenID = 'tokenID';
+  static const tokenStandard = 'tokenStandard';
+  static const tokensAmount = 'tokensAmount';
+  static const noCollectibles = 'noCollectibles';
+  static const tryReceiveNft = 'tryReceiveNft';
+  static const nftChainNotEnabled = 'nftChainNotEnabled';
+  static const nftChainEnabling = 'nftChainEnabling';
+  static const nftChainEnableFailed = 'nftChainEnableFailed';
+  static const nftEnableChainTitle = 'nftEnableChainTitle';
+  static const nftEnableChainBody = 'nftEnableChainBody';
+  static const nftEnableChainAction = 'nftEnableChainAction';
+  static const nftEnablingChainTitle = 'nftEnablingChainTitle';
+  static const nftEnablingChainBody = 'nftEnablingChainBody';
+  static const nftEnableChainFailedTitle = 'nftEnableChainFailedTitle';
+  static const nftEnableChainFailedBody = 'nftEnableChainFailedBody';
+  static const nftNoNetworksAvailable = 'nftNoNetworksAvailable';
+  static const networkFee = 'networkFee';
+  static const titleUnknown = 'titleUnknown';
+  static const maxCount = 'maxCount';
+  static const minCount = 'minCount';
+  static const successfullySent = 'successfullySent';
+  static const transactionId = 'transactionId';
+  static const transactionFee = 'transactionFee';
+  static const collectibles = 'collectibles';
+  static const sendingProcess = 'sendingProcess';
+  static const ercStandardDisclaimer = 'ercStandardDisclaimer';
+  static const nftReceiveNonSwapAddressWarning =
+      'nftReceiveNonSwapAddressWarning';
+  static const nftReceiveNonSwapWalletDetails =
+      'nftReceiveNonSwapWalletDetails';
+  static const nftMainLoggedOut = 'nftMainLoggedOut';
+  static const confirmLogoutOnAnotherTab = 'confirmLogoutOnAnotherTab';
+  static const refreshList = 'refreshList';
+  static const unableRetrieveNftData = 'unableRetrieveNftData';
+  static const tryCheckInternetConnection = 'tryCheckInternetConnection';
+  static const connectionToServersFailing = 'connectionToServersFailing';
+  static const resetWalletTitle = 'resetWalletTitle';
+  static const resetWalletContent = 'resetWalletContent';
+  static const resetCompleteTitle = 'resetCompleteTitle';
+  static const resetCompleteContent = 'resetCompleteContent';
+  static const noWalletsAvailable = 'noWalletsAvailable';
+  static const selectWalletToReset = 'selectWalletToReset';
+  static const qrScannerTitle = 'qrScannerTitle';
+  static const qrScannerErrorControllerUninitialized =
+      'qrScannerErrorControllerUninitialized';
+  static const qrScannerErrorPermissionDenied =
+      'qrScannerErrorPermissionDenied';
+  static const qrScannerErrorGenericError = 'qrScannerErrorGenericError';
+  static const qrScannerErrorTitle = 'qrScannerErrorTitle';
+  static const spend = 'spend';
+  static const viewInvoice = 'viewInvoice';
+  static const systemTimeWarning = 'systemTimeWarning';
+  static const errorCode = 'errorCode';
+  static const errorDetails = 'errorDetails';
+  static const errorMessage = 'errorMessage';
+  static const technicalDetails = 'technicalDetails';
+  static const followTrezorInstructions = 'followTrezorInstructions';
+  static const orderFailedTryAgain = 'orderFailedTryAgain';
+  static const noOptionsToPurchase = 'noOptionsToPurchase';
+  static const youReceive = 'youReceive';
+  static const selectFiat = 'selectFiat';
+  static const selectCoin = 'selectCoin';
+  static const bestOffer = 'bestOffer';
+  static const komodoWallet = 'komodoWallet';
+  static const loadingNfts = 'loadingNfts';
+  static const coinAssets = 'coinAssets';
+  static const commit = 'commit';
+  static const bundled = 'bundled';
+  static const updated = 'updated';
+  static const notUpdated = 'notUpdated';
+  static const api = 'api';
+  static const floodLogs = 'floodLogs';
+  static const addressNotFound = 'addressNotFound';
+  static const enterAmount = 'enterAmount';
+  static const submitting = 'submitting';
+  static const buyNow = 'buyNow';
+  static const fiatCantCompleteOrder = 'fiatCantCompleteOrder';
+  static const fiatPriceCanChange = 'fiatPriceCanChange';
+  static const fiatConnectWallet = 'fiatConnectWallet';
+  static const fiatMinimumAmount = 'fiatMinimumAmount';
+  static const fiatMaximumAmount = 'fiatMaximumAmount';
+  static const fiatPaymentSubmittedTitle = 'fiatPaymentSubmittedTitle';
+  static const fiatPaymentSubmittedMessage = 'fiatPaymentSubmittedMessage';
+  static const fiatPaymentSuccessTitle = 'fiatPaymentSuccessTitle';
+  static const fiatPaymentSuccessMessage = 'fiatPaymentSuccessMessage';
+  static const fiatPaymentFailedTitle = 'fiatPaymentFailedTitle';
+  static const fiatPaymentFailedMessage = 'fiatPaymentFailedMessage';
+  static const fiatPaymentInProgressTitle = 'fiatPaymentInProgressTitle';
+  static const fiatPaymentInProgressMessage = 'fiatPaymentInProgressMessage';
+  static const pleaseWait = 'pleaseWait';
+  static const bitrefillPaymentSuccessfull = 'bitrefillPaymentSuccessfull';
+  static const bitrefillPaymentSuccessfullInstruction =
+      'bitrefillPaymentSuccessfullInstruction';
+  static const tradingBot = 'tradingBot';
+  static const margin = 'margin';
+  static const updateInterval = 'updateInterval';
+  static const expertMode = 'expertMode';
+  static const testCoins = 'testCoins';
+  static const enableTradingBot = 'enableTradingBot';
+  static const saveOrders = 'saveOrders';
+  static const saveOrdersRestartHint = 'saveOrdersRestartHint';
+  static const exportMakerOrders = 'exportMakerOrders';
+  static const importMakerOrders = 'importMakerOrders';
+  static const noMakerOrdersToExport = 'noMakerOrdersToExport';
+  static const makerOrdersExportSuccess = 'makerOrdersExportSuccess';
+  static const makerOrdersExportFailed = 'makerOrdersExportFailed';
+  static const makerOrdersImportSuccess = 'makerOrdersImportSuccess';
+  static const makerOrdersImportFailed = 'makerOrdersImportFailed';
+  static const enableTestCoins = 'enableTestCoins';
+  static const diagnosticLogging = 'diagnosticLogging';
+  static const enableDiagnosticLogging = 'enableDiagnosticLogging';
+  static const makeMarket = 'makeMarket';
+  static const custom = 'custom';
+  static const edit = 'edit';
+  static const offer = 'offer';
+  static const asking = 'asking';
+  static const mmBotRestart = 'mmBotRestart';
+  static const mmBotStart = 'mmBotStart';
+  static const mmBotStop = 'mmBotStop';
+  static const mmBotStatusRunning = 'mmBotStatusRunning';
+  static const mmBotStatusStopped = 'mmBotStatusStopped';
+  static const mmBotStatusStarting = 'mmBotStatusStarting';
+  static const mmBotStatusStopping = 'mmBotStatusStopping';
+  static const mmBotTradeVolumeRequired = 'mmBotTradeVolumeRequired';
+  static const postitiveNumberRequired = 'postitiveNumberRequired';
+  static const mustBeLessThan = 'mustBeLessThan';
+  static const mmBotMinimumTradeVolume = 'mmBotMinimumTradeVolume';
+  static const mmBotVolumePerTrade = 'mmBotVolumePerTrade';
+  static const mmBotFirstTradePreview = 'mmBotFirstTradePreview';
+  static const mmBotFirstTradeEstimate = 'mmBotFirstTradeEstimate';
+  static const mmBotFirstOrderVolume = 'mmBotFirstOrderVolume';
+  static const importCustomToken = 'importCustomToken';
+  static const importTokenWarning = 'importTokenWarning';
+  static const importToken = 'importToken';
+  static const selectNetwork = 'selectNetwork';
+  static const tokenContractAddress = 'tokenContractAddress';
+  static const tokenNotFound = 'tokenNotFound';
+  static const decimals = 'decimals';
+  static const onlySendToThisAddress = 'onlySendToThisAddress';
+  static const scanTheQrCode = 'scanTheQrCode';
+  static const addresses = 'addresses';
+  static const creating = 'creating';
+  static const createAddress = 'createAddress';
+  static const hideZeroBalanceAddresses = 'hideZeroBalanceAddresses';
+  static const showAllAddresses = 'showAllAddresses';
+  static const showLessAddresses = 'showLessAddresses';
+  static const important = 'important';
+  static const trend = 'trend';
+  static const growth = 'growth';
+  static const portfolioGrowth = 'portfolioGrowth';
+  static const performance = 'performance';
+  static const portfolioPerformance = 'portfolioPerformance';
+  static const allTimeInvestment = 'allTimeInvestment';
+  static const allTimeProfit = 'allTimeProfit';
+  static const profitAndLoss = 'profitAndLoss';
+  static const alertDialogBitrefill = 'alertDialogBitrefill';
+  static const showNoTradingWarning = 'showNoTradingWarning';
+  static const showNoTradingWarningMessage = 'showNoTradingWarningMessage';
+  static const showNoTradingWarningButton = 'showNoTradingWarningButton';
+  static const amountFieldCheckboxListTile = 'amountFieldCheckboxListTile';
+  static const customFeeToggleTitle = 'customFeeToggleTitle';
+  static const priceChartCenterText = 'priceChartCenterText';
+  static const priceHistorySparklineTooltip = 'priceHistorySparklineTooltip';
+  static const statistics = 'statistics';
+  static const ibcTransferFieldTitle = 'ibcTransferFieldTitle';
+  static const ibcTransferFieldSubtitle = 'ibcTransferFieldSubtitle';
+  static const ibcChannel = 'ibcChannel';
+  static const ibcChannelHint = 'ibcChannelHint';
+  static const enterIbcChannel = 'enterIbcChannel';
+  static const successPageHeadline = 'successPageHeadline';
+  static const successPageBodySmall = 'successPageBodySmall';
+  static const withdrawErrorCardTileTitle = 'withdrawErrorCardTileTitle';
+  static const transactionSuccessful = 'transactionSuccessful';
+  static const customNetworkFee = 'customNetworkFee';
+  static const createNewAddress = 'createNewAddress';
+  static const searchAddresses = 'searchAddresses';
+  static const trend7d = 'trend7d';
+  static const tradingDisabledTooltip = 'tradingDisabledTooltip';
+  static const tradingDisabled = 'tradingDisabled';
+  static const nftDisabledTooltip = 'nftDisabledTooltip';
+  static const includeBlockedAssets = 'includeBlockedAssets';
+  static const unbanPubkeysResults = 'unbanPubkeysResults';
+  static const unbannedPubkeys = 'unbannedPubkeys';
+  static const stillBannedPubkeys = 'stillBannedPubkeys';
+  static const wereNotBannedPubkeys = 'wereNotBannedPubkeys';
+  static const reason = 'reason';
+  static const unbanPubkeys = 'unbanPubkeys';
+  static const unbanPubkeysDescription = 'unbanPubkeysDescription';
+  static const noBannedPubkeys = 'noBannedPubkeys';
+  static const unbanPubkeysFailed = 'unbanPubkeysFailed';
+  static const privateKeyRetrievalFailed = 'privateKeyRetrievalFailed';
+  static const privateKeysEmptyError = 'privateKeysEmptyError';
+  static const fetchingPrivateKeysTitle = 'fetchingPrivateKeysTitle';
+  static const fetchingPrivateKeysMessage = 'fetchingPrivateKeysMessage';
+  static const pubkeyType = 'pubkeyType';
+  static const pubkey = 'pubkey';
+  static const securitySettings = 'securitySettings';
+  static const zhtlcConfigureTitle = 'zhtlcConfigureTitle';
+  static const zhtlcZcashParamsPathLabel = 'zhtlcZcashParamsPathLabel';
+  static const zhtlcPathAutomaticallyDetected =
+      'zhtlcPathAutomaticallyDetected';
+  static const zhtlcSaplingParamsFolder = 'zhtlcSaplingParamsFolder';
+  static const zhtlcBlocksPerIterationLabel = 'zhtlcBlocksPerIterationLabel';
+  static const zhtlcScanIntervalLabel = 'zhtlcScanIntervalLabel';
+  static const zhtlcStartSyncFromLabel = 'zhtlcStartSyncFromLabel';
+  static const zhtlcEarliestSaplingOption = 'zhtlcEarliestSaplingOption';
+  static const zhtlcBlockHeightOption = 'zhtlcBlockHeightOption';
+  static const zhtlcShieldedAddress = 'zhtlcShieldedAddress';
+  static const zhtlcDateTimeOption = 'zhtlcDateTimeOption';
+  static const zhtlcSelectDateTimeLabel = 'zhtlcSelectDateTimeLabel';
+  static const zhtlcZcashParamsRequired = 'zhtlcZcashParamsRequired';
+  static const zhtlcInvalidBlockHeight = 'zhtlcInvalidBlockHeight';
+  static const zhtlcSelectDateTimeRequired = 'zhtlcSelectDateTimeRequired';
+  static const zhtlcDownloadingZcashParams = 'zhtlcDownloadingZcashParams';
+  static const zhtlcPreparingDownload = 'zhtlcPreparingDownload';
+  static const zhtlcErrorSettingUpZcash = 'zhtlcErrorSettingUpZcash';
+  static const zhtlcDateSyncHint = 'zhtlcDateSyncHint';
+  static const zhtlcActivating = 'zhtlcActivating';
+  static const zhtlcActivationWarning = 'zhtlcActivationWarning';
+  static const zhtlcAdvancedConfiguration = 'zhtlcAdvancedConfiguration';
+  static const zhtlcAdvancedConfigurationHint =
+      'zhtlcAdvancedConfigurationHint';
+  static const zhtlcConfigButton = 'zhtlcConfigButton';
+  static const zhtlcRecentTransactionsOption = 'zhtlcRecentTransactionsOption';
+  static const legacyMigrationCleanupTitle = 'legacyMigrationCleanupTitle';
+  static const legacyMigrationCleanupDescription =
+      'legacyMigrationCleanupDescription';
+  static const legacyMigrationTitle = 'legacyMigrationTitle';
+  static const legacyMigrationDescriptionNameAndPassword =
+      'legacyMigrationDescriptionNameAndPassword';
+  static const legacyMigrationDescriptionNameOnly =
+      'legacyMigrationDescriptionNameOnly';
+  static const legacyMigrationDescriptionPasswordOnly =
+      'legacyMigrationDescriptionPasswordOnly';
+  static const legacyMigrationAlreadyMigrated =
+      'legacyMigrationAlreadyMigrated';
+  static const kdfErrorGeneric = 'kdfErrorGeneric';
+  static const kdfErrorNotSufficientBalance = 'kdfErrorNotSufficientBalance';
+  static const kdfErrorNotSufficientPlatformBalanceForFee =
+      'kdfErrorNotSufficientPlatformBalanceForFee';
+  static const kdfErrorZeroBalanceToWithdrawMax =
+      'kdfErrorZeroBalanceToWithdrawMax';
+  static const kdfErrorAmountTooLow = 'kdfErrorAmountTooLow';
+  static const kdfErrorNotEnoughNftsAmount = 'kdfErrorNotEnoughNftsAmount';
+  static const kdfErrorInvalidAddress = 'kdfErrorInvalidAddress';
+  static const kdfErrorFromAddressNotFound = 'kdfErrorFromAddressNotFound';
+  static const kdfErrorUnexpectedFromAddress = 'kdfErrorUnexpectedFromAddress';
+  static const kdfErrorMyAddressNotNftOwner = 'kdfErrorMyAddressNotNftOwner';
+  static const kdfErrorNoSuchCoin = 'kdfErrorNoSuchCoin';
+  static const kdfErrorCoinNotFound = 'kdfErrorCoinNotFound';
+  static const kdfErrorCoinNotSupported = 'kdfErrorCoinNotSupported';
+  static const kdfErrorCoinIsNotActive = 'kdfErrorCoinIsNotActive';
+  static const kdfErrorCoinDoesntSupportWithdraw =
+      'kdfErrorCoinDoesntSupportWithdraw';
+  static const kdfErrorCoinDoesntSupportNftWithdraw =
+      'kdfErrorCoinDoesntSupportNftWithdraw';
+  static const kdfErrorNftProtocolNotSupported =
+      'kdfErrorNftProtocolNotSupported';
+  static const kdfErrorContractTypeDoesntSupportNft =
+      'kdfErrorContractTypeDoesntSupportNft';
+  static const kdfErrorTransport = 'kdfErrorTransport';
+  static const kdfErrorTimeout = 'kdfErrorTimeout';
+  static const kdfErrorTaskTimedOut = 'kdfErrorTaskTimedOut';
+  static const kdfErrorInvalidResponse = 'kdfErrorInvalidResponse';
+  static const kdfErrorUnreachableNodes = 'kdfErrorUnreachableNodes';
+  static const kdfErrorAtLeastOneNodeRequired =
+      'kdfErrorAtLeastOneNodeRequired';
+  static const kdfErrorClientConnectionFailed =
+      'kdfErrorClientConnectionFailed';
+  static const kdfErrorConnectToNodeError = 'kdfErrorConnectToNodeError';
+  static const kdfErrorActivationFailed = 'kdfErrorActivationFailed';
+  static const kdfErrorCouldNotFetchBalance = 'kdfErrorCouldNotFetchBalance';
+  static const kdfErrorUnsupportedChain = 'kdfErrorUnsupportedChain';
+  static const kdfErrorChainIdNotSet = 'kdfErrorChainIdNotSet';
+  static const kdfErrorNoChainIdSet = 'kdfErrorNoChainIdSet';
+  static const kdfErrorInvalidFeePolicy = 'kdfErrorInvalidFeePolicy';
+  static const kdfErrorInvalidFee = 'kdfErrorInvalidFee';
+  static const kdfErrorInvalidGasApiConfig = 'kdfErrorInvalidGasApiConfig';
+  static const kdfErrorNameTooLong = 'kdfErrorNameTooLong';
+  static const kdfErrorDescriptionTooLong = 'kdfErrorDescriptionTooLong';
+  static const kdfErrorNoSuchAccount = 'kdfErrorNoSuchAccount';
+  static const kdfErrorNoEnabledAccount = 'kdfErrorNoEnabledAccount';
+  static const kdfErrorAccountExistsAlready = 'kdfErrorAccountExistsAlready';
+  static const kdfErrorUnknownAccount = 'kdfErrorUnknownAccount';
+  static const kdfErrorLoadingAccount = 'kdfErrorLoadingAccount';
+  static const kdfErrorSavingAccount = 'kdfErrorSavingAccount';
+  static const kdfErrorHwError = 'kdfErrorHwError';
+  static const kdfErrorHwContextNotInitialized =
+      'kdfErrorHwContextNotInitialized';
+  static const kdfErrorCoinDoesntSupportTrezor =
+      'kdfErrorCoinDoesntSupportTrezor';
+  static const kdfErrorInvalidHardwareWalletCall =
+      'kdfErrorInvalidHardwareWalletCall';
+  static const kdfErrorNotSupported = 'kdfErrorNotSupported';
+  static const kdfErrorVolumeTooLow = 'kdfErrorVolumeTooLow';
+  static const kdfErrorMyRecentSwapsError = 'kdfErrorMyRecentSwapsError';
+  static const kdfErrorSwapInfoNotAvailable = 'kdfErrorSwapInfoNotAvailable';
+  static const kdfErrorInvalidRequest = 'kdfErrorInvalidRequest';
+  static const kdfErrorInvalidPayload = 'kdfErrorInvalidPayload';
+  static const kdfErrorInvalidMemo = 'kdfErrorInvalidMemo';
+  static const kdfErrorInvalidConfiguration = 'kdfErrorInvalidConfiguration';
+  static const kdfErrorPrivKeyPolicyNotAllowed =
+      'kdfErrorPrivKeyPolicyNotAllowed';
+  static const kdfErrorUnexpectedDerivationMethod =
+      'kdfErrorUnexpectedDerivationMethod';
+  static const kdfErrorActionNotAllowed = 'kdfErrorActionNotAllowed';
+  static const kdfErrorUnexpectedUserAction = 'kdfErrorUnexpectedUserAction';
+  static const kdfErrorBroadcastExpected = 'kdfErrorBroadcastExpected';
+  static const kdfErrorDbError = 'kdfErrorDbError';
+  static const kdfErrorWalletStorageError = 'kdfErrorWalletStorageError';
+  static const kdfErrorHDWalletStorageError = 'kdfErrorHDWalletStorageError';
+  static const kdfErrorInternal = 'kdfErrorInternal';
+  static const kdfErrorInternalError = 'kdfErrorInternalError';
+  static const kdfErrorUnsupportedError = 'kdfErrorUnsupportedError';
+  static const kdfErrorSigningError = 'kdfErrorSigningError';
+  static const kdfErrorSystemTimeError = 'kdfErrorSystemTimeError';
+  static const kdfErrorNumConversError = 'kdfErrorNumConversError';
+  static const kdfErrorIOError = 'kdfErrorIOError';
+  static const kdfErrorRpcError = 'kdfErrorRpcError';
+  static const kdfErrorRpcTaskError = 'kdfErrorRpcTaskError';
+  static const kdfErrorInvalidBip44Chain = 'kdfErrorInvalidBip44Chain';
+  static const kdfErrorBip32Error = 'kdfErrorBip32Error';
+  static const kdfErrorInvalidPath = 'kdfErrorInvalidPath';
+  static const kdfErrorInvalidPathToAddress = 'kdfErrorInvalidPathToAddress';
+  static const kdfErrorDeserializingDerivationPath =
+      'kdfErrorDeserializingDerivationPath';
+  static const kdfErrorInvalidSwapContractAddr =
+      'kdfErrorInvalidSwapContractAddr';
+  static const kdfErrorInvalidFallbackSwapContract =
+      'kdfErrorInvalidFallbackSwapContract';
+  static const kdfErrorCustomTokenError = 'kdfErrorCustomTokenError';
+  static const kdfErrorGetNftInfoError = 'kdfErrorGetNftInfoError';
+  static const kdfErrorMetamaskError = 'kdfErrorMetamaskError';
+  static const kdfErrorWalletConnectError = 'kdfErrorWalletConnectError';
+  static const sdk_errors_network_unavailable =
+      'sdk_errors.network_unavailable';
+  static const sdk_errors_timeout = 'sdk_errors.timeout';
+  static const sdk_errors_invalid_response = 'sdk_errors.invalid_response';
+  static const sdk_errors_insufficient_funds = 'sdk_errors.insufficient_funds';
+  static const sdk_errors_insufficient_gas = 'sdk_errors.insufficient_gas';
+  static const sdk_errors_zero_balance = 'sdk_errors.zero_balance';
+  static const sdk_errors_amount_too_low = 'sdk_errors.amount_too_low';
+  static const sdk_errors_invalid_address = 'sdk_errors.invalid_address';
+  static const sdk_errors_invalid_fee = 'sdk_errors.invalid_fee';
+  static const sdk_errors_invalid_memo = 'sdk_errors.invalid_memo';
+  static const sdk_errors_asset_not_activated =
+      'sdk_errors.asset_not_activated';
+  static const sdk_errors_activation_failed = 'sdk_errors.activation_failed';
+  static const sdk_errors_user_cancelled = 'sdk_errors.user_cancelled';
+  static const sdk_errors_hardware_failure = 'sdk_errors.hardware_failure';
+  static const sdk_errors_not_supported = 'sdk_errors.not_supported';
+  static const sdk_errors_auth_invalid_credentials =
+      'sdk_errors.auth_invalid_credentials';
+  static const sdk_errors_auth_unauthorized = 'sdk_errors.auth_unauthorized';
+  static const sdk_errors_auth_wallet_not_found =
+      'sdk_errors.auth_wallet_not_found';
+  static const sdk_errors_gasless_capability_not_ready =
+      'sdk_errors.gasless_capability_not_ready';
+  static const sdk_errors_gasless_status_unavailable =
+      'sdk_errors.gasless_status_unavailable';
+  static const sdk_errors_gasless_response_invalid =
+      'sdk_errors.gasless_response_invalid';
+  static const sdk_errors_gasless_max_fee_exceeded =
+      'sdk_errors.gasless_max_fee_exceeded';
+  static const sdk_errors_gasless_final_failure =
+      'sdk_errors.gasless_final_failure';
+  static const sdk_errors_gasless_submission_unknown =
+      'sdk_errors.gasless_submission_unknown';
+  static const sdk_errors_gasless_recovery_context_missing =
+      'sdk_errors.gasless_recovery_context_missing';
+  static const sdk_errors_gasless_preview_invalid =
+      'sdk_errors.gasless_preview_invalid';
+  static const sdk_errors_gasless_storage_unavailable =
+      'sdk_errors.gasless_storage_unavailable';
+  static const sdk_errors_gasless_transfer_unresolved =
+      'sdk_errors.gasless_transfer_unresolved';
+  static const sdk_errors_gasless_token_unsupported =
+      'sdk_errors.gasless_token_unsupported';
+  static const sdk_errors_gasless_authorization_expired =
+      'sdk_errors.gasless_authorization_expired';
+  static const sdk_errors_gasless_authentication_rejected =
+      'sdk_errors.gasless_authentication_rejected';
+  static const sdk_errors_gasless_rejected_before_relay =
+      'sdk_errors.gasless_rejected_before_relay';
+  static const sdk_errors_general = 'sdk_errors.general';
+  static const sdk_errors = 'sdk_errors';
+  static const copyDisplayedKeys = 'copyDisplayedKeys';
+  static const downloadDisplayedKeys = 'downloadDisplayedKeys';
+  static const shareDisplayedKeys = 'shareDisplayedKeys';
+  static const copyDisplayedKey = 'copyDisplayedKey';
+  static const privateKeyExportSessionChanged =
+      'privateKeyExportSessionChanged';
+  static const privateKeyExportCoverageNotice =
+      'privateKeyExportCoverageNotice';
+  static const privateKeyExportLegacyCoverage =
+      'privateKeyExportLegacyCoverage';
+  static const privateKeyExportAccountCoverage =
+      'privateKeyExportAccountCoverage';
+  static const privateKeyExportHdCoverage = 'privateKeyExportHdCoverage';
+  static const privateKeyExportReceiving = 'privateKeyExportReceiving';
+  static const privateKeyExportChange = 'privateKeyExportChange';
+  static const privateKeyExportUnknownBranch = 'privateKeyExportUnknownBranch';
+  static const privateKeyExportUnsupported = 'privateKeyExportUnsupported';
+  static const privateKeyExportTronUnavailable =
+      'privateKeyExportTronUnavailable';
+  static const privateKeyExportUnverified = 'privateKeyExportUnverified';
+  static const privateKeyExportAssetUnavailable =
+      'privateKeyExportAssetUnavailable';
+  static const privateKeyExportDeliveryFailed =
+      'privateKeyExportDeliveryFailed';
+  static const privateKeyExportDeliveryUnconfirmed =
+      'privateKeyExportDeliveryUnconfirmed';
+  static const privateKeyExportNoAssets = 'privateKeyExportNoAssets';
+  static const privateKeyExportShowQr = 'privateKeyExportShowQr';
+  static const privateKeyExportPublicKey = 'privateKeyExportPublicKey';
+  static const privateKeyExportCriticalTitle = 'privateKeyExportCriticalTitle';
+  static const privateKeyExportSummaryCounts = 'privateKeyExportSummaryCounts';
+  static const privateKeyExportSomeUnavailable =
+      'privateKeyExportSomeUnavailable';
+  static const privateKeyExportCoverageDetailsTitle =
+      'privateKeyExportCoverageDetailsTitle';
+  static const privateKeyExportCoverageLabel = 'privateKeyExportCoverageLabel';
+  static const privateKeyExportRevealGateHint =
+      'privateKeyExportRevealGateHint';
+  static const privateKeyExportRevealGateHintOn =
+      'privateKeyExportRevealGateHintOn';
+  static const privateKeyExportRevealKey = 'privateKeyExportRevealKey';
+  static const privateKeyExportHideKey = 'privateKeyExportHideKey';
+  static const privateKeyExportKeyHidden = 'privateKeyExportKeyHidden';
+  static const privateKeyExportPrivateKeyLabel =
+      'privateKeyExportPrivateKeyLabel';
+  static const privateKeyExportAddressLabel = 'privateKeyExportAddressLabel';
+  static const privateKeyExportDerivationPath =
+      'privateKeyExportDerivationPath';
+  static const privateKeyExportViewingKey = 'privateKeyExportViewingKey';
+  static const privateKeyExportIncludedBadge = 'privateKeyExportIncludedBadge';
+  static const privateKeyExportUnavailableBadge =
+      'privateKeyExportUnavailableBadge';
+  static const privateKeyExportAllFiltered = 'privateKeyExportAllFiltered';
+  static const privateKeyExportLoading = 'privateKeyExportLoading';
+  static const privateKeyExportBulkActionsTitle =
+      'privateKeyExportBulkActionsTitle';
+  static const walletDeletionRecoveryWarning = 'walletDeletionRecoveryWarning';
+  static const walletDeletionRecoveryUnavailable =
+      'walletDeletionRecoveryUnavailable';
+  static const walletDeletionReviewFailed = 'walletDeletionReviewFailed';
+  static const walletDeletionSubmissionBusy = 'walletDeletionSubmissionBusy';
+  static const walletDeletionReviewChanged = 'walletDeletionReviewChanged';
+  static const walletDeletionTargetChanged = 'walletDeletionTargetChanged';
+  static const seedBackupIdentityUnavailable = 'seedBackupIdentityUnavailable';
+  static const seedBackupSaveFailed = 'seedBackupSaveFailed';
+}

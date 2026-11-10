@@ -1,0 +1,335 @@
+import 'package:komodo_defi_sdk/komodo_defi_sdk.dart';
+import 'package:komodo_defi_types/komodo_defi_types.dart' show Asset, WalletId;
+import 'package:logging/logging.dart';
+import 'package:web_dex/bloc/coins_bloc/asset_coin_extension.dart';
+import 'package:web_dex/model/coin.dart';
+import 'package:web_dex/model/wallet.dart';
+
+final Logger _walletMetadataLog = Logger('KdfAuthMetadataExtension');
+
+/// Config IDs that upstream renamed, mapped to their current spelling.
+///
+/// `activated_coins` stores raw config IDs, and a stored ID that no longer
+/// names an asset is silently skipped — so without this a wallet that held
+/// Polygon before the MATIC -> POL rename would simply lose the row. The
+/// coins themselves are unaffected: POL keeps chain 137 and derivation path
+/// m/44'/60', so the funds are at the same address either way.
+const Map<String, String> _renamedCoinIds = {
+  'MATIC': 'POL',
+  'MATICTEST': 'POLTEST',
+  'NFT_MATIC': 'NFT_POL',
+};
+
+/// The config IDs to try for a stored activated coin, in priority order.
+///
+/// The stored ID is tried first and the rename is only a fallback, so this
+/// resolves whether or not the bundled coins config has picked up the rename
+/// yet. Rewriting unconditionally breaks the other direction: against a
+/// pre-rename config, `MATIC` -> `POL` turns a resolvable ID into an
+/// unresolvable one and drops the row it was meant to preserve.
+///
+/// Public so `test_units` can pin the mapping directly; not intended for use
+/// outside this file (`@visibleForTesting` does not recognise `test_units/`).
+List<String> activatedCoinIdCandidates(String storedId) => [
+  storedId,
+  if (_renamedCoinIds.containsKey(storedId)) _renamedCoinIds[storedId]!,
+];
+
+/// Stored IDs that a removal of [coinId] must also clear, so a wallet holding
+/// the pre-rename spelling is not left with an entry the UI cannot remove.
+List<String> legacyActivatedCoinIds(String coinId) => [
+  for (final entry in _renamedCoinIds.entries)
+    if (entry.value == coinId) entry.key,
+];
+
+extension KdfAuthMetadataExtension on KomodoDefiSdk {
+  /// Checks if a wallet with the specified ID exists in the system.
+  ///
+  /// Returns `true` if a user with the given [walletId] is found among
+  /// all registered users, `false` otherwise.
+  Future<bool> walletExists(String walletId) async {
+    final users = await auth.getUsers();
+    return users.any((user) => user.walletId.name == walletId);
+  }
+
+  /// Returns the wallet associated with the currently authenticated user.
+  ///
+  /// Returns `null` if no user is currently signed in.
+  Future<Wallet?> currentWallet() async {
+    final user = await auth.currentUser;
+    return user?.wallet;
+  }
+
+  /// Returns the stored list of wallet coin/asset IDs.
+  ///
+  /// If no user is signed in, returns an empty list.
+  Future<List<String>> getWalletCoinIds() async {
+    final user = await auth.currentUser;
+    if (user == null) return [];
+    return (await walletAssets.load()).toList();
+  }
+
+  /// Returns the stored list of wallet assets resolved from configuration IDs.
+  ///
+  /// Missing assets (for example, delisted coins) are skipped and logged for
+  /// visibility.
+  ///
+  /// Throws [StateError] if multiple assets are found with the same configuration ID.
+  Future<List<Asset>> getWalletAssets() async {
+    final coinIds = await getWalletCoinIds();
+    if (coinIds.isEmpty) {
+      return [];
+    }
+
+    final missingCoinIds = <String>{};
+    final walletAssets = <Asset>[];
+
+    for (final coinId in coinIds) {
+      var matchingAssets = <Asset>{};
+      for (final candidate in activatedCoinIdCandidates(coinId)) {
+        matchingAssets = assets.findAssetsByConfigId(candidate);
+        if (matchingAssets.isNotEmpty) break;
+      }
+      if (matchingAssets.isEmpty) {
+        missingCoinIds.add(coinId);
+        continue;
+      }
+
+      if (matchingAssets.length > 1) {
+        final assetIds = matchingAssets.map((asset) => asset.id.id).join(', ');
+        final message =
+            'Multiple assets found for activated coin ID "$coinId": $assetIds';
+        _walletMetadataLog.shout(message);
+        throw StateError(message);
+      }
+
+      walletAssets.add(matchingAssets.single);
+    }
+
+    if (missingCoinIds.isNotEmpty) {
+      _walletMetadataLog.warning(
+        'Skipping ${missingCoinIds.length} activated coin(s) that are no longer '
+        'available in the SDK (likely delisted): '
+        '${missingCoinIds.join(', ')}',
+      );
+    }
+
+    return walletAssets;
+  }
+
+  /// Returns the stored list of wallet coins converted from asset configuration IDs.
+  ///
+  /// This method retrieves the coin IDs from user metadata and converts them
+  /// to [Coin] objects. Uses `single` to maintain existing behavior which will
+  /// throw an exception if multiple assets share the same ticker.
+  ///
+  /// Missing assets (for example, delisted coins) are skipped and logged for
+  /// visibility.
+  ///
+  /// If no user is signed in, returns an empty list.
+  ///
+  /// Throws [StateError] if multiple assets are found with the same configuration ID.
+  Future<List<Coin>> getWalletCoins() async {
+    final walletAssets = await getWalletAssets();
+    return walletAssets.map((asset) => asset.toCoin()).toList();
+  }
+
+  /// Adds new coin/asset IDs to the current user's activated coins list.
+  ///
+  /// This method atomically merges the provided [coins] with the existing
+  /// activated coins, ensuring no duplicates and no lost writes under
+  /// concurrent calls.
+  ///
+  /// If no user is currently signed in, the operation will throw.
+  ///
+  /// [coins] - An iterable of coin/asset configuration IDs to add.
+  Future<void> addActivatedCoins(
+    Iterable<String> coins, {
+    required WalletId expectedWalletId,
+    AuthSessionContext? expectedSession,
+  }) async {
+    await walletAssets.add(coins, expectedWalletId: expectedWalletId);
+  }
+
+  /// Removes specified coin/asset IDs from the current user's activated coins list.
+  ///
+  /// This method atomically removes all occurrences of the provided [coins]
+  /// from the user's activated coins list, ensuring no lost writes under
+  /// concurrent calls.
+  ///
+  /// If no user is currently signed in, the operation will throw.
+  ///
+  /// [coins] - A list of coin/asset configuration IDs to remove.
+  Future<void> removeActivatedCoins(
+    List<String> coins, {
+    required WalletId expectedWalletId,
+    AuthSessionContext? expectedSession,
+  }) async {
+    // Clear the pre-rename spelling alongside the current one. The store
+    // removes exactly the ids it is given, and `activated_coins` holds raw
+    // config IDs, so a wallet that stored `MATIC` keeps an entry the UI can
+    // no longer name unless the legacy id is removed with it.
+    await walletAssets.remove([
+      for (final coin in coins) ...[coin, ...legacyActivatedCoinIds(coin)],
+    ], expectedWalletId: expectedWalletId);
+  }
+
+  /// Sets the seed backup confirmation status for the current user.
+  ///
+  /// This method stores whether the user has confirmed backing up their seed phrase.
+  /// This is typically used to track wallet security compliance.
+  ///
+  /// The write fails if the original wallet is no longer authenticated.
+  ///
+  /// [hasBackup] - Whether the seed has been backed up. Defaults to `true`.
+  /// [expectedWalletId] binds a completed backup flow to the wallet whose
+  /// recovery phrase was shown, even if the active wallet changes mid-write.
+  Future<void> confirmSeedBackup({
+    bool hasBackup = true,
+    required WalletId expectedWalletId,
+  }) async {
+    await auth.setOrRemoveActiveUserKeyValue(
+      'has_backup',
+      hasBackup,
+      expectedWalletId: expectedWalletId,
+    );
+  }
+
+  /// Sets the wallet type for the current user.
+  ///
+  /// This method stores the wallet type in user metadata, which can be used
+  /// to determine wallet-specific behavior and features.
+  ///
+  /// The write fails if the original wallet is no longer authenticated.
+  ///
+  /// [type] - The wallet type to set for the current user.
+  Future<void> setWalletType(
+    WalletType type, {
+    required WalletId expectedWalletId,
+  }) async {
+    await auth.setOrRemoveActiveUserKeyValue(
+      'type',
+      type.name,
+      expectedWalletId: expectedWalletId,
+    );
+  }
+
+  /// Sets the wallet provenance for the current user.
+  ///
+  /// Stored values are used by wallet selection UIs to show quick metadata
+  /// tags (generated/imported).
+  Future<void> setWalletProvenance(
+    WalletProvenance provenance, {
+    required WalletId expectedWalletId,
+  }) async {
+    await auth.setOrRemoveActiveUserKeyValue(
+      'wallet_provenance',
+      provenance.name,
+      expectedWalletId: expectedWalletId,
+    );
+  }
+
+  /// Sets the wallet creation timestamp for the current user.
+  ///
+  /// Stored as milliseconds since epoch.
+  Future<void> setWalletCreatedAt(
+    DateTime createdAt, {
+    required WalletId expectedWalletId,
+  }) async {
+    await auth.setOrRemoveActiveUserKeyValue(
+      'wallet_created_at',
+      createdAt.millisecondsSinceEpoch,
+      expectedWalletId: expectedWalletId,
+    );
+  }
+
+  /// Stores legacy-origin linkage metadata on the current user.
+  ///
+  /// All four metadata keys must be written for the migration linkage to be
+  /// recognised on next launch. If any individual write fails, this method
+  /// attempts to roll back the keys that were already written (best-effort)
+  /// before rethrowing so callers can decide how to recover.
+  Future<void> setMigratedLegacySource({
+    required WalletId expectedWalletId,
+    required LegacyWalletSource source,
+    required LegacyMigrationCleanupStatus cleanupStatus,
+  }) async {
+    final List<String> writtenKeys = <String>[];
+    try {
+      await auth.setOrRemoveActiveUserKeyValue(
+        legacySourceKindMetadataKey,
+        source.kind.name,
+        expectedWalletId: expectedWalletId,
+      );
+      writtenKeys.add(legacySourceKindMetadataKey);
+
+      await auth.setOrRemoveActiveUserKeyValue(
+        legacySourceWalletIdMetadataKey,
+        source.originalWalletId,
+        expectedWalletId: expectedWalletId,
+      );
+      writtenKeys.add(legacySourceWalletIdMetadataKey);
+
+      await auth.setOrRemoveActiveUserKeyValue(
+        legacySourceWalletNameMetadataKey,
+        source.originalWalletName,
+        expectedWalletId: expectedWalletId,
+      );
+      writtenKeys.add(legacySourceWalletNameMetadataKey);
+
+      await setLegacyCleanupStatus(
+        cleanupStatus,
+        expectedWalletId: expectedWalletId,
+      );
+      writtenKeys.add(legacyCleanupStatusMetadataKey);
+    } catch (error, stackTrace) {
+      _walletMetadataLog.shout(
+        'Failed to write migration linkage metadata '
+        '(wrote ${writtenKeys.length}/4 keys: $writtenKeys). '
+        'Attempting rollback.',
+        error,
+        stackTrace,
+      );
+
+      for (final key in writtenKeys) {
+        try {
+          await auth.setOrRemoveActiveUserKeyValue(
+            key,
+            null,
+            expectedWalletId: expectedWalletId,
+          );
+        } catch (rollbackError) {
+          _walletMetadataLog.warning(
+            'Rollback of metadata key "$key" failed: $rollbackError',
+          );
+        }
+      }
+
+      rethrow;
+    }
+  }
+
+  /// Updates only the legacy cleanup status metadata on the current user.
+  Future<void> setLegacyCleanupStatus(
+    LegacyMigrationCleanupStatus cleanupStatus, {
+    required WalletId expectedWalletId,
+  }) async {
+    await auth.setOrRemoveActiveUserKeyValue(
+      legacyCleanupStatusMetadataKey,
+      cleanupStatus.name,
+      expectedWalletId: expectedWalletId,
+    );
+  }
+
+  /// Stores hidden legacy wallet extras metadata on the current user.
+  Future<void> setLegacyWalletExtras(
+    Map<String, dynamic> extras, {
+    required WalletId expectedWalletId,
+  }) async {
+    await auth.setOrRemoveActiveUserKeyValue(
+      legacyWalletExtrasMetadataKey,
+      extras.isEmpty ? null : extras,
+      expectedWalletId: expectedWalletId,
+    );
+  }
+}

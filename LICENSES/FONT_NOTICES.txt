@@ -1,0 +1,5 @@
+Embedded font metadata:
+Manrope: Copyright 2019 The Manrope Project Authors (https://github.com/sharanda/manrope), SIL OFL 1.1.
+Rubik: Copyright 2015 The Rubik Project Authors (https://github.com/googlefonts/rubik), SIL OFL 1.1.
+Roboto v20 fallback: Copyright 2011 Google Inc. All Rights Reserved. Apache License 2.0.
+Font bytes were preserved; license references were read from their embedded name tables.

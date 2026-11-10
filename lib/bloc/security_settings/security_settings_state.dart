@@ -1,0 +1,177 @@
+import 'package:equatable/equatable.dart';
+import 'package:komodo_defi_rpc_methods/komodo_defi_rpc_methods.dart';
+
+/// Represents the different steps in the security settings flow.
+/// Each step corresponds to a different screen or phase of the user journey.
+enum SecuritySettingsStep {
+  /// The main security settings screen with backup options.
+  securityMain,
+
+  /// The screen showing the seed words for backup.
+  seedShow,
+
+  /// The screen confirming that the seed words have been written down.
+  seedConfirm,
+
+  /// The screen showing that the seed words have been successfully confirmed.
+  seedSuccess,
+
+  /// The screen showing the private keys for export.
+  /// Results live in the dedicated, screen-scoped PrivateKeyExportBloc.
+  privateKeyShow,
+
+  /// The screen for updating the wallet password.
+  passwordUpdate,
+}
+
+enum SeedBackupSaveError { identityUnavailable, persistenceFailed }
+
+/// Navigation, seed progress and compatibility flags for security settings.
+/// PrivateKeyExportState owns the current export's short-lived result, with
+/// redacted diagnostics; its service owns password verification and retrieval.
+class SecuritySettingsState extends Equatable {
+  const SecuritySettingsState({
+    required this.step,
+    required this.showSeedWords,
+    required this.isSeedSaved,
+    required this.showPrivateKeys,
+    required this.arePrivateKeysSaved,
+    required this.isAuthenticating,
+    required this.privateKeyAuthenticationSuccess,
+    required this.authError,
+    required this.isUnbanningPubkeys,
+    this.unbanResult,
+    this.unbanError,
+    this.backupStartedAt,
+    this.isSavingBackup = false,
+    this.backupSaveError,
+  });
+
+  factory SecuritySettingsState.initialState() {
+    return const SecuritySettingsState(
+      step: SecuritySettingsStep.securityMain,
+      showSeedWords: false,
+      isSeedSaved: false,
+      showPrivateKeys: false,
+      arePrivateKeysSaved: false,
+      isAuthenticating: false,
+      privateKeyAuthenticationSuccess: false,
+      authError: null,
+      isUnbanningPubkeys: false,
+      unbanResult: null,
+      unbanError: null,
+    );
+  }
+
+  /// The current step of the security settings flow.
+  final SecuritySettingsStep step;
+
+  /// Whether the seed words are currently being shown.
+  final bool showSeedWords;
+
+  /// Whether the seed words have been written down or saved somewhere by the user.
+  final bool isSeedSaved;
+
+  /// Whether the private keys are currently being shown.
+  /// Note: This only controls UI visibility, not the actual private key data.
+  final bool showPrivateKeys;
+
+  /// Whether the private keys have been written down or saved somewhere by the user.
+  final bool arePrivateKeysSaved;
+
+  /// Whether authentication is currently in progress for private key access.
+  final bool isAuthenticating;
+
+  /// Legacy sign-in presence signal. This is not password verification and
+  /// does not authorize the dedicated private-key export flow.
+  final bool privateKeyAuthenticationSuccess;
+
+  /// Any authentication error that occurred during private key access.
+  final String? authError;
+
+  /// Whether pubkey unbanning is currently in progress.
+  final bool isUnbanningPubkeys;
+
+  /// Result of the last unban operation, if any.
+  final UnbanPubkeysResult? unbanResult;
+
+  /// Error message if the last unban operation failed.
+  final String? unbanError;
+
+  /// When the user entered a backup flow (seed reveal or private-key export).
+  ///
+  /// The anchor for `backup_complete`'s `backup_time`, which was previously
+  /// hardcoded to 0 and so measured nothing. Null outside a backup flow, which
+  /// is why the event falls back to 0 rather than inventing a duration.
+  final DateTime? backupStartedAt;
+  final bool isSavingBackup;
+  final SeedBackupSaveError? backupSaveError;
+
+  /// How long the current backup flow has been open, or null outside one.
+  Duration? get backupElapsed => backupStartedAt == null
+      ? null
+      : DateTime.now().difference(backupStartedAt!);
+
+  @override
+  List<Object?> get props => [
+    step,
+    showSeedWords,
+    isSeedSaved,
+    showPrivateKeys,
+    arePrivateKeysSaved,
+    isAuthenticating,
+    privateKeyAuthenticationSuccess,
+    authError,
+    isUnbanningPubkeys,
+    unbanResult,
+    unbanError,
+    backupStartedAt,
+    isSavingBackup,
+    backupSaveError,
+  ];
+
+  /// Creates a copy of this state with the given fields replaced with new values.
+  SecuritySettingsState copyWith({
+    SecuritySettingsStep? step,
+    bool? showSeedWords,
+    bool? isSeedSaved,
+    bool? showPrivateKeys,
+    bool? arePrivateKeysSaved,
+    bool? isAuthenticating,
+    bool? privateKeyAuthenticationSuccess,
+    String? authError,
+    bool clearAuthError = false,
+    bool? isUnbanningPubkeys,
+    UnbanPubkeysResult? unbanResult,
+    String? unbanError,
+    bool clearUnbanError = false,
+    DateTime? backupStartedAt,
+    bool clearBackupStartedAt = false,
+    bool? isSavingBackup,
+    SeedBackupSaveError? backupSaveError,
+    bool clearBackupSaveError = false,
+  }) {
+    return SecuritySettingsState(
+      isSavingBackup: isSavingBackup ?? this.isSavingBackup,
+      backupSaveError: clearBackupSaveError
+          ? null
+          : backupSaveError ?? this.backupSaveError,
+      step: step ?? this.step,
+      showSeedWords: showSeedWords ?? this.showSeedWords,
+      isSeedSaved: isSeedSaved ?? this.isSeedSaved,
+      showPrivateKeys: showPrivateKeys ?? this.showPrivateKeys,
+      arePrivateKeysSaved: arePrivateKeysSaved ?? this.arePrivateKeysSaved,
+      isAuthenticating: isAuthenticating ?? this.isAuthenticating,
+      privateKeyAuthenticationSuccess:
+          privateKeyAuthenticationSuccess ??
+          this.privateKeyAuthenticationSuccess,
+      authError: clearAuthError ? null : (authError ?? this.authError),
+      isUnbanningPubkeys: isUnbanningPubkeys ?? this.isUnbanningPubkeys,
+      unbanResult: unbanResult ?? this.unbanResult,
+      unbanError: clearUnbanError ? null : (unbanError ?? this.unbanError),
+      backupStartedAt: clearBackupStartedAt
+          ? null
+          : (backupStartedAt ?? this.backupStartedAt),
+    );
+  }
+}

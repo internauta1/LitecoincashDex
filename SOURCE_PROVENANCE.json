@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "referenceRevision": "8762-core-navigation-validation",
+  "referenceRuntimeManifestSha256": "7BF4FF526DF2CE4D289F0287D5EC3ADFB5BCB36739DDCC5D4D2D918F8E64F847",
+  "sdkMode": "vendored modified sources; upstream parent revision unknown",
+  "sdkSourceManifestSha256": "44323E9D1A99E1F34064A4444ABB2FD9A8EFE75EDA34A414F8703C21C2D53FA3",
+  "pinnedPublicAssets": 454,
+  "privateDataCopied": false,
+  "historicalGitLineageClaimed": false
+}

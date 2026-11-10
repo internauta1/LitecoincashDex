@@ -1,0 +1,4 @@
+LAST_RUN: 2026-11-09T13:44:39.821744
+This is a marker file used to invoke the komodo_wallet_build_transformer as declared
+in packages/komodo_defi_framework/pubspec.yaml under flutter.assets.
+

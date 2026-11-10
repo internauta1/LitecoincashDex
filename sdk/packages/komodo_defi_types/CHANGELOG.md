@@ -1,0 +1,171 @@
+## 0.6.0 (2026-09-24)
+
+ - **BREAKING**(coins): rename `CoinSubClass.matic` to `CoinSubClass.polygon`
+   and return `POL` from its `ticker` and `iconTicker`, following the
+   MATIC -> POL rename in the coins configuration. `formatted` ("Polygon") and
+   `tokenStandardSuffix` ("PLG20") are unchanged, so `CoinSubClass.parse` now
+   resolves "Polygon" by exact enum name and "POL" by exact ticker rather than
+   by substring fallback — the latter previously resolved to the unsupported
+   `CoinSubClass.slp`. The pre-rename "Matic" label still parses as
+   `CoinSubClass.polygon`, so asset configs and custom tokens stored before the
+   rename keep loading.
+ - **FEAT**(private-keys): add the structured per-asset export result types used
+   by `SecurityManager.exportPrivateKeys`, and carry `viewingKey` and
+   `zDerivationPath` on private-key metadata. Coverage describes supported
+   offline exports; TRON/TRC20 return `unsupportedProtocol`. Remove the
+   active-address coverage, limited-coverage flag, separate signing-asset
+   attribution, TRON opt-in and TRON-only failure categories from the
+   unreleased export API.
+ - **FEAT**(diagnostics): add `DiagnosticSanitizer` for metadata-only
+   diagnostics, and expose the shared sensitive-field taxonomy through
+   `SecurityUtils.isSensitiveDiagnosticKey`.
+ - **SECURITY**(diagnostics): reduce every non-primitive value to `<redacted>`
+   when censoring recursively, treat a non-string key as sensitive, and give
+   key-bearing types a redacting `toString()`.
+
+ - **CHORE**(deps): align workspace requirements with SDK 0.8.0:
+   `komodo_defi_rpc_methods` `^0.7.0`.
+
+## 0.5.0 — preparation history
+
+> Note: This release has breaking GasFree withdrawal interfaces.
+
+ - **BREAKING** **FEAT**(gasfree): align provider activation, fee preview,
+   signed relay, submission, and receipt models with the final KDF contract.
+ - **BREAKING** **FIX**(gasfree): obtain accepted trace identity and final fee
+   from submission/trace status instead of preview or provider echoes.
+ - **BREAKING** **FIX**(withdraw): enforce mutually exclusive explicit-amount
+   and maximum request modes, omitting `amount` whenever `max` is true.
+ - **SECURITY**(gasfree): persist only wallet-scoped journal and trace recovery
+   data, never signed authorization material or provider credentials.
+ - **FEAT**(gasfree): rename the local reservation identity to `journalId`;
+   migrate trace-backed records and keep trace-less records outcome-unknown.
+ - **BREAKING** **REFACTOR**(activation): remove `BatchActivationProgress`.
+   Multi-asset progress is now tracked by the SDK's activation coordinator and
+   surfaced as `AssetActivationState`; `ActivationProgress` itself is unchanged.
+ - **FEAT**(activation): add `AssetActivationState` and `AssetActivationStatus`
+   for per-asset activation state with a guaranteed terminal value.
+ - **FEAT**(pubkeys): add `HdGapLimit`, which resolves the HD address gap to
+   scan - 3 by default, 1 on a newly generated wallet's first sign-in, and the
+   full 20 for hardware wallets.
+ - **FIX**(transactions): treat an absent `received_by_me` or `spent_by_me` as
+   zero when converting a KDF transaction, rather than parsing null.
+ - **SECURITY**(logging): replace the log-censoring key list with a set that
+   also covers authorization headers, bearer/API tokens, cookies and GasFree
+   authorization material, and redact to `<redacted>` rather than a run of
+   asterisks that leaked the value's length.
+ - **FIX**(deps): declare the `flutter_test` dev dependency that
+   `sia_protocol_test.dart` imports.
+ - **CHORE**(analysis): drop two null assertions the analyzer proves are
+   no-ops, which `dart pub publish` reports as warnings.
+
+## 0.4.1 — preparation history
+
+ - **FIX**(tron): support TRON explorer URL templates and correct TRC20 badge classification (#338, #344).
+ - **FIX**(models): accept numeric JSON values encoded as either `int` or `num` (#336).
+ - **FEAT**(migration): add auth error and wallet metadata types used by legacy wallet migration.
+ - **FEAT**(fees): expose richer fee information for balance recovery flows (#341).
+ - **FEAT**(transaction-history): add strategy metadata needed by the Tronscan history provider (#339).
+
+## 0.4.0 — preparation history
+
+> Note: This release has breaking changes.
+
+ - **FIX**(types): use reified generics in JSON traversal for wasm/minified builds (#329).
+ - **FIX**(startup): handle 6133 seed fallback and invalid configs (#318).
+ - **FIX**(asset-tagging): correct UTXO coins incorrectly tagged as Smart Chain (#244).
+ - **FIX**(sdk): close balance and pubkeysubscriptions on auth state changes (#232).
+ - **FIX**(zhltc): zhltc activation fixes (#227).
+ - **FIX**(custom-token-import): refresh asset list on import and use lowercase for custom token import (#220).
+ - **FEAT**(sdk): add token safety and fee support helpers (#319).
+ - **FEAT**(coins): Add TRON and TRC20 support (#316).
+ - **FEAT**(sdk): typed error handling, trading streams, and activation refactoring (#312).
+ - **FEAT**: add support for ETH-BASE and derived assets (#254).
+ - **FEAT**(coin-config): add custom token support to coin config manager (#225).
+ - **FEAT**(types): parent display name suffix via subclass (#213).
+ - **BREAKING** **FIX**(rpc): minimise RPC usage with comprehensive caching and streaming support (#262).
+
+## 0.3.2+1
+
+ - **DOCS**(komodo_defi_types): update CHANGELOG for 0.3.2 with pub submission fix.
+
+## 0.3.2
+
+ - **FIX**: pub submission errors.
+
+## 0.3.1
+
+ - **FIX**: pub submission errors.
+ - **FIX**(deps): resolve deps error.
+ - **FEAT**(coin-updates): integrate komodo_coin_updates into komodo_coins (#190).
+
+## 0.3.0+2
+
+> Note: This release has breaking changes.
+
+ - **REFACTOR**(tx history): Fix misrepresented fees field.
+ - **REFACTOR**(types): Restructure type packages.
+ - **PERF**: migrate packages to Dart workspace".
+ - **PERF**: migrate packages to Dart workspace.
+ - **FIX**(debugging): Avoid unnecessary exceptions.
+ - **FIX**(deps): resolve deps error.
+ - **FIX**(wasm-ops): fix example app login by improving JS call error handling (#185).
+ - **FIX**(ui): resolve stale asset balance widget.
+ - **FIX**(types): export missing RPC types.
+ - **FIX**(activation): Fix eth activation parsing exception.
+ - **FIX**(withdraw): revert temporary IBC channel type changes (#136).
+ - **FIX**: SIA support.
+ - **FIX**(pubkey-strategy): use new PrivateKeyPolicy constructors for checks (#97).
+ - **FIX**(activation): eth PrivateKeyPolicy enum breaking changes (#96).
+ - **FIX**: pub submission errors.
+ - **FIX**: Add pubkey property needed for GUI.
+ - **FIX**(trezor,activation): add PrivateKeyPolicy to AuthOptions (#75).
+ - **FIX**: Fix breaking dependency upgrades.
+ - **FIX**(fee-info): update tendermint, erc20, and qrc20 `fee_details` response format (#60).
+ - **FIX**(rpc-password-generator): update password validation to match KDF password policy (#58).
+ - **FIX**(withdrawal-manager): use legacy RPCs for tendermint withdrawals (#57).
+ - **FIX**: breaking tendermint config changes and build transformer not using branch-specific content URL for non-master branches (#55).
+ - **FIX**(native-auth-ops): remove exceptions from logs in KDF restart function (#45).
+ - **FIX**(types): Fix Sub-class naming.
+ - **FIX**(bug): Fix JSON list parsing.
+ - **FIX**(local-exe-ops): local executable startup and registration (#33).
+ - **FIX**(example): Fix registration form regression.
+ - **FIX**(transaction-storage): transaction streaming errors and hanging due to storage error (#28).
+ - **FIX**(types): Make types index private.
+ - **FIX**(example): encrypted seed import (#16).
+ - **FEAT**(sdk): add trezor support via RPC and SDK wrappers (#77).
+ - **FEAT**(auth): Implement new exceptions for update password RPC.
+ - **FEAT**(signing): Add message signing prefix to models.
+ - **FEAT**(auth): poll trezor connection status and sign out when disconnected (#126).
+ - **FEAT**(KDF): Make provision for HD mode signing.
+ - **FEAT**(market-data): add support for multiple market data providers (#145).
+ - **FEAT**: enhance balance and market data management in SDK.
+ - **FEAT**(types): add new models and utility classes for reactive data handling.
+ - **FEAT**(dev): Install `melos`.
+ - **FEAT**(sdk): Balance manager WIP.
+ - **FEAT**(rpc): trading-related RPCs/types (#191).
+ - **FEAT**(withdrawals): Implement HD withdrawals.
+ - **FEAT**: add configurable seed node system with remote fetching (#85).
+ - **FEAT**(hd): HD withdrawal supporting widgets and (WIP) multi-instance example.
+ - **FEAT**(seed): update seed node format (#87).
+ - **FEAT**: custom token import (#22).
+ - **FEAT**(pubkey): add streamed new address API with Trezor confirmations (#123).
+ - **FEAT**(sdk): Implement remaining SDK withdrawal functionality.
+ - **FEAT**(types): Iterate on withdrawal-related types.
+ - **FEAT**(withdraw): add ibc source channel parameter (#63).
+ - **FEAT**(ui): add helper constructors for AssetLogo from legacy ticker and AssetId (#109).
+ - **FEAT**: offline private key export (#160).
+ - **FEAT**(ui): adjust error display layout for narrow screens (#114).
+ - **FEAT**(asset): add message signing support flag (#105).
+ - **FEAT**(HD): Implement GUI utility for asset status.
+ - **FEAT**(auth): allow weak password in auth options (#54).
+ - **FEAT**(fees): integrate fee management (#152).
+ - **BUG**(import): Fix incorrect encrypted seed parsing.
+ - **BUG**: fix missing pubkey equality operators.
+ - **BUG**(auth): Fix registration failing on Windows and Windows web builds  (#34).
+ - **BREAKING** **FEAT**(sdk): Multi-SDK instance support.
+ - **BREAKING** **FEAT**: add Flutter Web WASM support with OPFS interop extensions (#176).
+
+## 0.3.0+0
+
+- chore: add LICENSE, repository; add characters dep; loosen flutter bound

@@ -1,0 +1,126 @@
+part of 'coins_bloc.dart';
+
+class CoinsState extends Equatable {
+  /// The list of available and activated assets to be displayed in the app.
+  /// This list is filtered to exclude assets not intended to be shown to the
+  /// user. E.g. NFT assets.
+  CoinsState({
+    required Map<String, Coin> coins,
+    required Map<String, Coin> walletCoins,
+    required this.pubkeys,
+    required this.prices,
+  }) : coins = _filterExcludedAssets(coins),
+       walletCoins = _filterExcludedAssets(walletCoins);
+
+  factory CoinsState.initial() => CoinsState(
+    coins: const {},
+    walletCoins: const {},
+    pubkeys: const {},
+    prices: const {},
+  );
+
+  final Map<String, Coin> coins;
+  final Map<String, Coin> walletCoins;
+  final Map<String, AssetPubkeys> pubkeys;
+  final Map<String, CexPrice> prices;
+
+  @override
+  List<Object> get props => [coins, walletCoins, pubkeys, prices];
+
+  /// Creates a copy of the current state with the option to update
+  /// specific fields.
+  /// NOTE: This method filters the coins and walletCoins maps to exclude
+  /// assets that should not be shown to the user.
+  CoinsState copyWith({
+    Map<String, Coin>? coins,
+    Map<String, Coin>? walletCoins,
+    Map<String, AssetPubkeys>? pubkeys,
+    Map<String, CexPrice>? prices,
+  }) {
+    // Filtering out "NFT_*" assets is done by the constructor. It used to be
+    // repeated here as well, so every copyWith rebuilt both maps twice - four
+    // O(coins) allocations per emission over an ~800-entry catalogue, on a
+    // path that emits dozens of times during login.
+    return CoinsState(
+      coins: coins ?? this.coins,
+      walletCoins: walletCoins ?? this.walletCoins,
+      pubkeys: pubkeys ?? this.pubkeys,
+      prices: prices ?? this.prices,
+    );
+  }
+
+  static Map<String, Coin> _filterExcludedAssets(Map<String, Coin> coins) {
+    // Return the input untouched when there is nothing to strip.
+    //
+    // `Map.fromEntries` always allocated a new map, so every state carried maps
+    // that were never `identical` to the previous state's - which defeats
+    // `Bloc.emit`'s identity short-circuit and forces Equatable into a deep
+    // walk of both ~800-entry catalogues (each `Coin` recursing into its
+    // `parentCoin`) on every emission, dozens of times during login, only to
+    // conclude "unchanged".
+    //
+    // `excludedAssetList` is a const set and callers pass maps that have
+    // already been through this filter, so the common case is a pure scan with
+    // no allocation.
+    var hasExcluded = false;
+    for (final coinId in coins.keys) {
+      if (excludedAssetList.contains(coinId)) {
+        hasExcluded = true;
+        break;
+      }
+    }
+    if (!hasExcluded) return coins;
+
+    return Map.fromEntries(
+      coins.entries.where((entry) {
+        final coinId = entry.key;
+        return !excludedAssetList.contains(coinId);
+      }),
+    );
+  }
+
+  /// CEX quote for [assetId] from [prices] (keys: uppercased [AssetSymbol.configSymbol]).
+  ///
+  /// Distinct from [KomodoDefiSdk.marketData] spot pricing: wallet chrome totals use this
+  /// feed with SDK balances (`computeWalletTotalUsd`); sorting and portfolio growth may
+  /// still use SDK prices until a single pricing path exists.
+  CexPrice? getPriceForAsset(AssetId assetId) {
+    return prices[assetId.symbol.configSymbol.toUpperCase()];
+  }
+
+  /// Gets the 24h price change percentage for a given asset ID
+  double? get24hChangeForAsset(AssetId assetId) {
+    return getPriceForAsset(assetId)?.change24h?.toDouble();
+  }
+
+  /// Calculates the USD price for a given numeric [amount] of [coinAbbr].
+  ///
+  /// Returns null if:
+  /// - The coin is not found in the state
+  /// - The coin does not have a USD price
+  ///
+  /// Note: This will be migrated to use the SDK's price functionality in the future.
+  /// See the MarketDataManager in the SDK for the new implementation.
+  double? getUsdPriceForAmount(num amount, String coinAbbr) {
+    final Coin? coin = coins[coinAbbr];
+    final double parsedAmount = amount.toDouble();
+    final CexPrice? cexPrice = prices[coinAbbr.toUpperCase()];
+    final double? usdPrice = cexPrice?.price?.toDouble();
+
+    if (coin == null || usdPrice == null) {
+      return null;
+    }
+    return parsedAmount * usdPrice;
+  }
+
+  /// Backward-compatible string overload.
+  @Deprecated(
+    'Use getUsdPriceForAmount(num amount, String coinAbbr) to avoid '
+    'string-parsing bugs from display-formatted values.',
+  )
+  double? getUsdPriceByAmount(String amount, String coinAbbr) {
+    final double? parsedAmount = double.tryParse(amount);
+    if (parsedAmount == null) return null;
+    return getUsdPriceForAmount(parsedAmount, coinAbbr);
+  }
+}

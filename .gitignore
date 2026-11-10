@@ -1,0 +1,172 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+.kiro/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+.vscode/
+.vs/
+
+# Firebase extras
+.firebase/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+**/build/
+contrib/coins_config.json
+
+# Web related
+web/src/*
+web/dist/*.js
+web/dist/*.wasm
+web/dist/*LICENSE.txt
+web/src/mm2/
+web/src/kdfi/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# CI/CD Extras
+demo_link
+airdex-build.tar.gz
+**/test_wallet.json
+**/debug_data.json
+**/config/firebase_analytics.json
+
+# js
+node_modules
+assets/**/debug_data.json
+contrib/coins_config.json
+
+**/.api_last_updated*
+
+# Android C++ files
+android/app/.cxx/
+
+# Python
+venv/
+**/__pycache__/
+
+# FVM Version Cache
+.fvm/
+/macos/build
+AGENTS_1.md
+# .dmg Release
+dist/
+ 
+# KDF generated web artifacts.
+#
+# The build unzips a downloaded archive into web/kdf/, and the layout varies:
+# build_config.json declares `web/kdf/bin`, while current archives carry their
+# own `kdf/` root and land in `web/kdf/kdf/{bin,res}`. Enumerating spellings
+# has already failed once â€” a 32 MB kdflib_bg.wasm was committed in b84ba3c59
+# and removed in 7a9a05363 â€” so ignore everything under web/kdf/ and re-include
+# only res/, which is hand-maintained wrapper source that must stay tracked.
+web/kdf/*
+!web/kdf/res/
+
+# Local environment secrets
+**/.env
+**/.env.local
+**/.env.*.local
+!**/.env.example
+/.lifi/
+
+# Generated integration and export artifacts
+/ios/Flutter/ephemeral/Packages/
+/ios/Flutter/ephemeral/flutter_native_integration.env
+/output/
+
+# AI tool local skill bundles; keep project-scoped .claude/.cursor config trackable.
+/.claude/skills/
+/.cursor/skills/
+/.nano-banana-config.json
+/generated_imgs
+/.1code
+
+# Android release signing secrets â€” never commit.
+**/*.jks
+**/*.p12
+android/key.properties
+
+# hookify rules are per-developer, not project policy
+.claude/*.local.md
+
+# KDF binary fetched for the DEX counterparty in CI
+.counterparty/
+counterparty.log
+
+# User-created wallets for manual validation; never package or publish.
+/.private-testing/
+
+# Local isolated wallets, launch evidence and operator-specific automation.
+/.isolated-testing/
+/tool/validation-runs/
+/tool/mission/
+/tool/validation/
+/kdf-compat-test/
+/Microsoft/
+/reports/
+/deliverables/
+/publication-review*.json
+/AGENTS.md
+/Abrir-teste-*.cmd
+/Verificar-teste-*.cmd
+
+# Native engines are release artifacts, not application source.
+/windows/bin/
+/linux/bin/
+/macos/bin/
+/sdk/packages/komodo_defi_framework/windows/bin/
+/sdk/packages/komodo_defi_framework/linux/bin/
+/sdk/packages/komodo_defi_framework/macos/bin/
+/sdk/packages/komodo_defi_framework/web/kdf/bin/
+
+# Private data and diagnostic/signing material, wherever generated.
+*.dmp
+*.pdb
+*.hive
+*.sqlite
+*.sqlite3
+*.db
+*.pfx
+*.pem
+**/wallet.dat
+**/wallet.json
+**/.env.*
+!**/.env.example
+
+/artifacts/kdf/windows/
+/dist/
+/.pubwin/
+/.audit-tools/

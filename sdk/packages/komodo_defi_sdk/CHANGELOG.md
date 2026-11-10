@@ -1,0 +1,340 @@
+## 0.8.0 (2026-09-24)
+
+Prepared for SDK 0.8.0: wallet-identity, diagnostics and private-key export
+remediation. See the [complete release overview](../../CHANGELOG.md#sdk-080-overview).
+Metadata writes, sessions, wallet creation and deletion, activation and the
+transaction history cache have breaking API changes; this is not a
+source-compatible patch of 0.7.0. See the
+[migration guide](../../docs/RELEASE_0.8.0.md).
+
+ - **SECURITY**(history): authenticate the transaction cache. Records were
+   AES-CBC with no authentication tag, and the surrounding CRC-32 gave no
+   integrity - CRC-32 is affine, so an edit could be corrected without knowing
+   the seed, and the web backend writes no CRC at all. Records are now
+   AES-256-GCM: an altered, truncated or relocated record fails its tag check
+   and is dropped instead of decoding into plausible bytes. The key is
+   re-derived under a new label, so a cache from a previous release is rejected
+   at open and rebuilt from providers.
+ - **BREAKING** **FEAT**(history): bound the persisted transaction cache and
+   hide its metadata. Database keys are opaque keyed identifiers, and
+   timestamps, wallet and asset scope and transaction IDs live inside the
+   encrypted records. Retention defaults to 1,000 transactions per wallet and
+   asset, 20,000 overall and 64 MiB, set through
+   `KomodoDefiSdkConfig.transactionHistoryCachePolicy`. Storage reads return
+   `CachedTransactionPage`, whose `cachedCount` counts retained rows rather
+   than a provider total. The previous plaintext cache is deleted, never read
+   or migrated.
+ - **BREAKING** **FEAT**(auth): issue session contexts. Runtime work survives
+   metadata and hash refreshes, while work from a replaced, signed-out or
+   reauthenticated session is rejected. Sensitive writes still verify identity
+   inside the persistence lock.
+ - **BREAKING** **FEAT**(auth): make wallet creation and initial metadata
+   persistence atomic. A name collision fails with a typed error, and an
+   existing wallet requires an explicit login rather than being adopted.
+ - **BREAKING** **FEAT**(assets): separate saved selection from runtime
+   activation. Activation returns typed outcomes, and the host's policy applies
+   before a restored session can activate anything.
+ - **BREAKING** **FEAT**(wallet): prepare deletion against a reviewed wallet and
+   recovery snapshot, recheck it under the submission lease, report busy while
+   an outcome is being recorded, and retain unresolved GasFree recovery records
+   after deletion.
+ - **FIX**(wallet): restore the open-time orphaned-wallet sweep as a deletion
+   backstop. The deletion-time purge stays the primary path, but in the store's
+   degraded memory-only mode it throws and its failure is swallowed, so without
+   the sweep a deleted wallet's encrypted history survived until ordinary
+   eviction. The sweep fails open: an empty or throwing catalogue means "do not
+   know", never "delete everything".
+ - **FIX**(wallet): stop wallet deletion deadlocking when the history cache has
+   not been opened yet. The deletion purge opened the cache while
+   `deleteWallet` held the wallet catalog lock, and the open's orphaned-wallet
+   sweep then listed wallets through that same non-reentrant lock. The sweep
+   now runs after the open, lists wallets without holding the cache lock, and
+   keeps history used since the open.
+ - **FIX**(history): prune a reopened cache only once every row is indexed. A
+   scope's recency lives on its latest row alone, so pruning batch by batch
+   could evict a recently used wallet or asset under a smaller global limit.
+ - **FIX**(activation): reject a restricted asset that KDF still has enabled
+   instead of reporting it already active, in the shared coordinator and in
+   warm or joined manager activation. A success is rechecked against the
+   policy as each caller receives it, including a caller that joins a finished
+   shared activation, so a restriction published before then fails it. A
+   restriction that stops an activation now also fails the callers that joined
+   it, which used to wait forever. Every withdrawal, including Tendermint and
+   SIA withdrawals that skip activation, rechecks the restriction immediately
+   before it broadcasts, so a consumer holding a progress event cannot
+   broadcast after a restriction lands. Cached activation stays usable while
+   the policy is loading or unavailable, unless a retained restriction covers
+   the asset or its parent.
+ - **FIX**(sdk): carry a shared pubkey fetch's and a shared activation's failure
+   as a value. One future is handed to every caller joining the same in-flight
+   work, and those callers do not share an error zone, because `retry()` runs
+   each attempt inside its own `runZonedGuarded`. Dart will not deliver a
+   future's error across that boundary: it reports the error as uncaught in the
+   creating zone and leaves the cross-zone joiner waiting forever. Each caller
+   now rethrows the outcome in its own zone.
+ - **FIX**(history): decode the legacy `matic` `sub_class` name as
+   `CoinSubClass.polygon`, so transaction history stored before the rename is
+   not downgraded to `CoinSubClass.unknown`.
+ - **FIX**(history): preserve verified wallet identity and active history streams
+   during degraded same-wallet authentication events.
+ - **FIX**(history): retain one wallet context across historical and live results
+   so a wallet switch cannot carry the previous wallet's rows into the new stream.
+ - **FIX**(history): recheck the wallet session synchronously before recording
+   activation. On WebAssembly, an auth event can run after asynchronous
+   validation completes and otherwise mark the replacement wallet activated.
+ - **BREAKING** **FIX**(auth): `sdk.auth` metadata setters and atomic updates
+   require the original `expectedWalletId`. Writes fail closed when identity
+   cannot be verified or the active wallet changes. See the
+   [local-auth migration guidance](../komodo_defi_local_auth/README.md#migrating-metadata-writes).
+ - **FEAT**(security): add `SecurityManager.exportPrivateKeys`, exporting each
+   offline-supported asset independently with concurrency limited to two.
+ - **FIX**(security): report TRON/TRC20 private-key export as
+   `unsupportedProtocol` until KDF supports `get_private_keys` for TRON.
+   Both structured and strict export reject these protocols before issuing an
+   RPC. Remove the active-key fallback, scalar/address derivation, HD metadata
+   searches and direct PointyCastle dependency.
+ - **SECURITY**(security): bind export capabilities to a verified wallet
+   identity, the manager that issued them, and a source-owned authentication
+   generation that revokes synchronously before an authentication transition.
+ - **SECURITY**(diagnostics): keep RPC and startup diagnostics metadata-only,
+   and redact secret-bearing diagnostic strings.
+ - **FEAT**(diagnostics): version persisted diagnostic storage, clean up legacy
+   records, and serialize writes and disposal behind stable native and browser
+   snapshots.
+ - **CHORE**(deps): require `komodo_defi_local_auth` `^0.6.0`,
+   `komodo_defi_rpc_methods` `^0.7.0`, `komodo_defi_types` `^0.6.0`,
+   `komodo_defi_framework` `^0.6.0` and `komodo_coin_updates`
+   `^2.1.1`.
+ - **TEST**(history): run wallet-race regressions in Chrome/WebAssembly in CI.
+ - **TEST**(security): cover structured export, session invalidation and
+   TRON/TRC20 rejection without RPC calls while retaining successful exports
+   for supported assets in a mixed selection.
+
+ - **FIX**(activation): bind completion and coordinator work to the originating
+   wallet session, rejecting delayed results after a wallet switch (#376).
+ - **FIX**(gasfree): apply acceptance and reconciliation atomically and keep
+   browser recovery from discarding a live submission's journal record (#376).
+ - **FIX**(gasfree): cancel local waits during disposal, drain journal writes
+   before releasing submission ownership, and suppress detached relay/trace
+   continuations while preserving unresolved outcomes for recovery (#377).
+
+## 0.7.0 — preparation history
+
+> Note: This release has breaking GasFree activation and withdrawal behavior.
+
+ - **BREAKING** **FEAT**(gasfree): derive token enrollment only from activated
+   TRC20 `gasless.enabled` configuration and require an authoritative
+   account-status check before custody balance or sends become available.
+   Applications may amend normalized asset configuration before SDK parsing
+   through `assetConfigTransform`.
+ - **BREAKING** **FEAT**(gasfree): configure the documented
+   `tron_gasless_provider` and per-token `gasless` fields during ordinary TRON
+   activation. Remove runtime `gasless::configure`, its restart fallback, and
+   the legacy V0/V1/bound compatibility contracts.
+ - **BREAKING** **FEAT**(gasfree): adopt the required four-state account status
+   contract (`available`, `pending_transfer`, `token_unsupported`, and
+   `provider_unreachable`) with endpoint-typed provider, custody-address, and
+   token-decimal errors.
+ - **SECURITY**(gasfree): persist a wallet-scoped local `journalId` before
+   submission, never serialize it to KDF, retain unknown outcomes without
+   resubmitting, and migrate accepted records with a trace ID into trace
+   recovery.
+ - **FEAT**(gasfree): subscribe to `GASLESS_TRACE:<coin>` before submission,
+   persist KDF's accepted `trace_id`, reconcile it once immediately, and follow
+   matching success/error stream events. Restart and disconnect recovery use a
+   one-shot `gasless::trace_status` request.
+ - **BREAKING** **FIX**(gasfree): serialize only KDF's documented withdrawal and
+   relay fields, report the actual Standard/GasFree submission rail, and obtain
+   final fee and finality from trace status rather than preview metadata.
+ - **FIX**(gasfree): treat account-status `max_withdrawable` as an advisory
+   status value and delegate maximum sends to KDF with `max: true` and no
+   amount.
+ - **FIX**(gasfree): retain custody/recovery access during provider outages,
+   preserve KDF-compatible Iguana, software-HD, and hardware-HD activation
+   identities, preserve cross-page address perspectives, and expose final fee
+   plus confirmation metadata without enabling resubmission.
+ - **FIX**(pubkeys): migrate legacy address metadata conservatively so funded
+   and previously used Standard addresses remain visible.
+ - **FIX**(gasfree): keep KDF's fresh custody total distinct from provider
+   spendability and Standard balances; remove external custody-balance and
+   finality readers.
+ - **FEAT**(activation): expose per-asset activation state through
+   `activationStates`, `watchActivationStates` and `watchActivationStateOf`,
+   and reach a terminal state on every path - a progress stream that never
+   emits and never closes no longer strands the caller past its deadline.
+ - **FEAT**(transaction-history): persist transaction history to disk. A coin's
+   history is served from local storage on a cold start and the network walk
+   that follows is a refresh rather than a first fetch. On by default, with
+   unbounded retention; `KomodoDefiSdkConfig` gates it.
+ - **FEAT**(transaction-history): add a Blockscout strategy so GLEEC and GRC-20
+   report history instead of returning an empty list.
+ - **FEAT**(balances): paint balances from local storage before activation
+   completes, and keep the balance watcher alive across a transport blip or a
+   degraded wallet identity rather than emitting nothing at all.
+ - **PERF**(pubkeys): scale the HD address gap scan through `HdGapLimit` -
+   3 addresses, or 1 on a newly generated wallet's first sign-in, against KDF's
+   default of 20 - and skip the redundant post-activation scan. Hardware
+   wallets keep the full gap of 20. Measured single-coin HD activation falls
+   from 46.9s to roughly 13.1s.
+ - **PERF**(auth): cut the identity RPCs issued on every sign-in and stop
+   activation precaching from blocking first paint.
+ - **FIX**(wallets): purge wallet-scoped caches - derived addresses, activation
+   config, enabled assets, transaction history - inside `deleteWallet` via the
+   new `KomodoDefiAuth.onWalletDeletion` hook, so deleting and immediately
+   recreating a wallet cannot race a still-running purge.
+ - **FIX**(balances): read cached public keys only after the undelivered
+   wallet-switch check, so a balance cannot be painted from the previous wallet.
+ - **FIX**(gasfree): discard an untraced pending transfer under a single lock,
+   so a reservation belonging to an accepted transfer can no longer be stripped
+   between the lookup and the removal.
+ - **FIX**(deps): declare `meta`, which `activation_strategy_base.dart`
+   imports, and the `flutter_test` and `plugin_platform_interface` dev
+   dependencies the tests import. They resolved only through the workspace, so
+   `dart pub publish` rejected the package.
+ - **FIX**(deps): raise the `flutter_secure_storage` lower bound off the
+   `10.0.0-beta.4` pre-release to `^10.0.0`. It already resolved to a stable
+   10.x, and pub warns when a stable release depends on a pre-release.
+
+## 0.6.0 — preparation history
+
+> Note: This release has breaking changes.
+
+ - **FIX**(activation): restore coordinated TRX activation and market-data lookup (#340).
+ - **FIX**(explorers): support TRON explorer URL templates in SDK transaction flows (#338).
+ - **FIX**(market-data): keep last-known spot prices available while rotating cache snapshots (#335).
+ - **FEAT**(migration): add SDK integration for legacy wallet discovery, verification, import, and cleanup.
+ - **FEAT**(balances): add balance recovery mode and richer fee information plumbing (#341).
+ - **FEAT**(transaction-history): add a Tronscan strategy with address, cursor, and fixed-scale amount codecs (#339).
+ - **BREAKING** **FEAT**(sia): route SIA activation and withdrawals through the hardened SIA strategy and RPC namespace (#343).
+
+## 0.5.0 — preparation history
+
+> Note: This release has breaking changes.
+
+ - **FIX**(streaming): gate enable_* calls on real SSE first-byte event (#332).
+ - **FIX**(withdrawals): remove duplicate executeWithdrawal method (#322).
+ - **FIX**(sdk): expose custom token cleanup (#321).
+ - **FIX**: swap zcash params primary/backup URLs to use official z.cash as primary (#301).
+ - **FIX**(sdk): close balance and pubkeysubscriptions on auth state changes (#232).
+ - **FIX**(zhltc): zhltc activation fixes (#227).
+ - **FIX**(custom-token-import): refresh asset list on import and use lowercase for custom token import (#220).
+ - **FEAT**(sdk): add SIA activation and withdrawal support (#320).
+ - **FEAT**(sdk): add token safety and fee support helpers (#319).
+ - **FEAT**(coins): Add TRON and TRC20 support (#316).
+ - **FEAT**(sdk): add high-level balance/transaction manager interfaces (#314).
+ - **FEAT**(sdk): typed error handling, trading streams, and activation refactoring (#312).
+ - **FEAT**(activation): integrate ActivatedAssetsCache to optimize asset activation checks.
+ - **FEAT**: add support for ETH-BASE and derived assets (#254).
+ - **FEAT**(message-signing): Add AddressPath type and refactor to use Asset/PubkeyInfo (#231).
+ - **FEAT**(coin-config): add custom token support to coin config manager (#225).
+ - **FEAT**(cex-market-data): add CoinPaprika API provider as a fallback option (#215).
+ - **BREAKING** **FIX**(rpc): minimise RPC usage with comprehensive caching and streaming support (#262).
+
+## 0.4.0+3
+
+ - Update a dependency to the latest release.
+
+## 0.4.0+2
+
+ - Update a dependency to the latest release.
+
+## 0.4.0+1
+
+ - **FIX**: add missing dependency.
+
+## 0.4.0
+
+> Note: This release has breaking changes.
+
+ - **FIX**(cex-market-data): coingecko ohlc parsing (#203).
+ - **FEAT**(coin-updates): integrate komodo_coin_updates into komodo_coins (#190).
+ - **BREAKING** **CHORE**: unify Dart SDK (^3.9.0) and Flutter (>=3.35.0 <3.36.0) constraints across workspace.
+
+## 0.3.0+1
+
+> Note: This release has breaking changes.
+
+ - **REFACTOR**: improve code quality and documentation.
+ - **REFACTOR**(tx history): Fix misrepresented fees field.
+ - **REFACTOR**(ui): improve balance text widget implementation.
+ - **REFACTOR**(sdk): improve transaction history and withdrawal managers.
+ - **REFACTOR**(sdk): update transaction history manager for new architecture.
+ - **REFACTOR**(sdk): restructure activation and asset management flow.
+ - **REFACTOR**(sdk): implement dependency injection with GetIt container.
+ - **REFACTOR**(types): Restructure type packages.
+ - **PERF**: migrate packages to Dart workspace.
+ - **PERF**: migrate packages to Dart workspace".
+ - **FIX**(activation): track activation status to avoid duplicate activation requests (#80)" (#153).
+ - **FIX**: unify+upgrade Dart/Flutter versions.
+ - **FIX**(activation): track activation status to avoid duplicate activation requests (#80).
+ - **FIX**(withdraw): revert temporary IBC channel type changes (#136).
+ - **FIX**: resolve bug with dispose logic.
+ - **FIX**: stop KDF when disposed.
+ - **FIX**(activation): eth PrivateKeyPolicy enum breaking changes (#96).
+ - **FIX**(trezor,activation): add PrivateKeyPolicy to AuthOptions (#75).
+ - **FIX**(withdrawal-manager): use legacy RPCs for tendermint withdrawals (#57).
+ - **FIX**: breaking tendermint config changes and build transformer not using branch-specific content URL for non-master branches (#55).
+ - **FIX**(native-auth-ops): remove exceptions from logs in KDF restart function (#45).
+ - **FIX**(withdraw): update amount when isMaxAmount and show dropdown icon (#44).
+ - **FIX**(transaction-storage): transaction streaming errors and hanging due to storage error (#28).
+ - **FIX**(multi-sdk): Fix example app withdrawals SDK instance.
+ - **FIX**(transaction-history): EVM StackOverflow exception (#30).
+ - **FIX**(example): Fix registration form regression.
+ - **FIX**(local-exe-ops): local executable startup and registration (#33).
+ - **FIX**(asset-manager): add missing ticker index initialization (#24).
+ - **FIX**(example): encrypted seed import (#16).
+ - **FIX**(assets): Add ticker-safe asset lookup.
+ - **FIX**(ui): resolve stale asset balance widget.
+ - **FIX**(native-ops): mobile kdf startup config requires dbdir parameter (#35).
+ - **FIX**(auth_service): hd wallet registration deadlock (#12).
+ - **FIX**(market-data-price): try fetch current price from komodo price repository first before cex repository (#167).
+ - **FIX**(auth_service): legacy wallet bip39 validation (#18).
+ - **FIX**(transaction-history): non-hd transaction history support (#25).
+ - **FEAT**(KDF): Make provision for HD mode signing.
+ - **FEAT**(auth): Add update password feature.
+ - **FEAT**: enhance balance and market data management in SDK.
+ - **FEAT**: add configurable seed node system with remote fetching (#85).
+ - **FEAT**(ui): improve asset list and authentication UI.
+ - **FEAT**(error-handling): enhance balance and address loading error states.
+ - **FEAT**(auth): poll trezor connection status and sign out when disconnected (#126).
+ - **FEAT**(transactions): add activations and withdrawal priority features.
+ - **FEAT**(ui): update asset components and SDK integrations.
+ - **FEAT**(market-data): add support for multiple market data providers (#145).
+ - **FEAT**(pubkey-manager): add pubkey watch function similar to balance watch (#178).
+ - **FEAT**(withdrawals): Implement HD withdrawals.
+ - **FEAT**(sdk): redesign balance manager with improved API and reliability.
+ - **FEAT**: nft enable RPC and activation params (#39).
+ - **FEAT**(signing): Implement message signing + format.
+ - **FEAT**(dev): Install `melos`.
+ - **FEAT**(auth): Implement new exceptions for update password RPC.
+ - **FEAT**(ui): Address and fee UI enhancements + formatting.
+ - **FEAT**(withdraw): add ibc source channel parameter (#63).
+ - **FEAT**(rpc): trading-related RPCs/types (#191).
+ - **FEAT**(ui): add AssetLogo widget (#78).
+ - **FEAT**(sdk): add trezor support via RPC and SDK wrappers (#77).
+ - **FEAT**(hd): HD withdrawal supporting widgets and (WIP) multi-instance example.
+ - **FEAT**(asset): add message signing support flag (#105).
+ - **FEAT**: custom token import (#22).
+ - **FEAT**(ui): adjust error display layout for narrow screens (#114).
+ - **FEAT**(ui): add helper constructors for AssetLogo from legacy ticker and AssetId (#109).
+ - **FEAT**(pubkey): add streamed new address API with Trezor confirmations (#123).
+ - **FEAT**: protect SDK after disposal (#116).
+ - **FEAT**(asset): Add legacy asset transition helpers.
+ - **FEAT**(sdk): Implement remaining SDK withdrawal functionality.
+ - **FEAT**(HD): Implement GUI utility for asset status.
+ - **FEAT**: offline private key export (#160).
+ - **FEAT**(activation): disable tx history when using external strategy (#151).
+ - **FEAT**(pubkeys): add unbanning support.
+ - **FEAT**(fees): integrate fee management (#152).
+ - **FEAT**(sdk): Balance manager WIP.
+ - **BUG**(assets): Fix missing export for legacy extension.
+ - **BUG**(tx): Fix broken legacy UTXO tx history.
+ - **BUG**(auth): Fix registration failing on Windows and Windows web builds  (#34).
+ - **BUG**(tx): Fix and optimise transaction history SDK.
+ - **BREAKING** **FEAT**(sdk): Multi-SDK instance support.
+ - **BREAKING** **FEAT**: add Flutter Web WASM support with OPFS interop extensions (#176).
+ - **BREAKING** **CHORE**: unify Dart SDK (^3.9.0) and Flutter (>=3.35.0 <3.36.0) constraints across workspace.
+
+## 0.3.0+0
+
+- chore: switch internal deps to hosted; add LICENSE; pin logging constraint

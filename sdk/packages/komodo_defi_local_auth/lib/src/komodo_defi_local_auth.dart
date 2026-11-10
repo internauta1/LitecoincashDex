@@ -1,0 +1,988 @@
+import 'dart:async';
+import 'dart:developer' show log;
+
+import 'package:komodo_defi_framework/komodo_defi_framework.dart';
+import 'package:komodo_defi_local_auth/src/auth/auth_service.dart';
+import 'package:komodo_defi_local_auth/src/auth/auth_session.dart';
+import 'package:komodo_defi_local_auth/src/auth/auth_state.dart';
+import 'package:komodo_defi_local_auth/src/auth/storage/secure_storage.dart';
+import 'package:komodo_defi_local_auth/src/trezor/_trezor_index.dart';
+import 'package:komodo_defi_rpc_methods/komodo_defi_rpc_methods.dart';
+import 'package:komodo_defi_types/komodo_defi_types.dart';
+
+/// A single deletion authorized by the SDK's installed lifecycle coordinator.
+/// Its final target check runs inside the catalog transaction, before the RPC.
+final class WalletDeletionPermit {
+  WalletDeletionPermit._(this._issuer, this._validate);
+  final Object _issuer;
+  final Future<void> Function(KdfUser target) _validate;
+  bool _used = false;
+}
+
+final class WalletDeletionReviewRequiredException implements Exception {
+  const WalletDeletionReviewRequiredException();
+  @override
+  String toString() => 'Review wallet deletion before confirming it';
+}
+
+/// The [KomodoDefiAuth] class provides a simplified local authentication
+/// service for managing user sign-in, registration, and mnemonic handling
+/// within the Komodo DeFi Framework.
+///
+/// By default, the class operates in HD mode, which may be unexpected for
+/// developers familiar with the KDF API's default behavior. The default
+/// [AuthOptions] enables HD wallet mode, but this can be changed using
+/// the [AuthOptions] parameter in the sign-in and registration methods.
+///
+/// NB: Pubkey address
+abstract interface class KomodoDefiAuth {
+  /// Captures ownership of the current runtime session without requiring a
+  /// fresh public-key hash. Use it for asynchronous work, not as secret-access
+  /// authorization. Metadata refresh and identity enrichment preserve it.
+  Future<AuthSessionContext> captureSessionContext();
+  bool isSessionContextCurrent(AuthSessionContext context);
+  void ensureSessionContextCurrent(AuthSessionContext context);
+  Stream<AuthSessionContext?> watchSessionContext();
+
+  /// Merges metadata atomically after fresh identity verification. Null values
+  /// remove keys. Throws [AuthIdentityUnavailableException] for retryable proof
+  /// loss and [AuthSessionChangedException] when the original session ended.
+  Future<KdfUser> updateMetadataForSession(
+    AuthSessionContext context,
+    Map<String, dynamic> updates,
+  );
+
+  /// Synchronous revision of the underlying authentication session.
+  ///
+  /// Capture before asynchronous sensitive work and compare before using its
+  /// result. Session transitions invalidate it even when the wallet is the
+  /// same.
+  /// The revision is instance-local and is not a persisted wallet identifier.
+  int get authGeneration;
+
+  /// Synchronous invalidations for immediately clearing sensitive UI state.
+  Stream<int> get authGenerationChanges;
+
+  /// Sensitive work cannot start while an authentication transition is pending
+  /// or after this service is disposed.
+  bool get isAuthTransitionInProgress;
+
+  /// Ensures that the local authentication system has been initialized.
+  ///
+  /// This method must be called before interacting with authentication features.
+  /// If the system is already initialized, this method does nothing.
+  Future<void> ensureInitialized();
+
+  /// Signs in a user with the specified [walletName] and [password].
+  ///
+  /// By default, the system will launch in HD mode (enabled in the [AuthOptions]),
+  /// which may differ from the non-HD mode used in other areas of the KDF API.
+  /// Developers can override the [derivationMethod] in [AuthOptions] to change
+  /// this behavior.
+  ///
+  /// Throws [AuthException] if an error occurs during sign-in.
+  Future<KdfUser> signIn({
+    required String walletName,
+    required String password,
+    AuthOptions options = const AuthOptions(
+      derivationMethod: DerivationMethod.hdWallet,
+    ),
+  });
+
+  /// Signs in a user with the specified [walletName] and [password].
+  ///
+  /// Returns a stream of [AuthenticationState] that provides real-time updates
+  /// of the authentication process. For Trezor wallets, this includes device
+  /// initialization states. For regular wallets, it will emit completion or error states.
+  Stream<AuthenticationState> signInStream({
+    required String walletName,
+    required String password,
+    AuthOptions options = const AuthOptions(
+      derivationMethod: DerivationMethod.hdWallet,
+    ),
+  });
+
+  /// Creates a new wallet and saves [initialMetadata] before publishing it.
+  /// Existing names always fail with [AuthExceptionType.walletAlreadyExists].
+  ///
+  /// By default, the system will launch in HD mode (enabled in the [AuthOptions]),
+  /// which may differ from the non-HD mode used in other areas of the KDF API.
+  /// Developers can override the [DerivationMethod] in [AuthOptions] to change
+  /// this behavior. An optional [mnemonic] can be provided during registration.
+  ///
+  /// Throws [AuthException] if registration is disabled or if an error occurs
+  /// during registration.
+  Future<KdfUser> register({
+    required String walletName,
+    required String password,
+    AuthOptions options = const AuthOptions(
+      derivationMethod: DerivationMethod.hdWallet,
+    ),
+    Mnemonic? mnemonic,
+    Map<String, dynamic> initialMetadata = const {},
+  });
+
+  /// Creates a new wallet and saves [initialMetadata] before publishing it.
+  /// Existing names always fail with [AuthExceptionType.walletAlreadyExists].
+  ///
+  /// Returns a stream of [AuthenticationState] that provides real-time updates
+  /// of the registration process. For Trezor wallets, this includes device
+  /// initialization states. For regular wallets, it will emit completion or error states.
+  Stream<AuthenticationState> registerStream({
+    required String walletName,
+    required String password,
+    AuthOptions options = const AuthOptions(
+      derivationMethod: DerivationMethod.hdWallet,
+    ),
+    Mnemonic? mnemonic,
+    Map<String, dynamic> initialMetadata = const {},
+  });
+
+  /// A stream that emits authentication state changes for the current user.
+  ///
+  /// Returns a [Stream] of [KdfUser?] representing the currently signed-in
+  /// user. The stream will emit `null` if the user is signed out.
+  Stream<KdfUser?> get authStateChanges;
+
+  /// Watches the current user state and emits updates when it changes.
+  ///
+  /// Returns a [Stream] of [KdfUser?] that continuously monitors the current
+  /// user state. This is useful for reactive UI updates when the user signs
+  /// in, signs out, or when user data is updated.
+  ///
+  /// The stream will emit `null` if no user is signed in, and a [KdfUser]
+  /// object when a user is authenticated.
+  Stream<KdfUser?> watchCurrentUser();
+
+  /// Retrieves the current signed-in user, if available.
+  ///
+  /// Returns a [KdfUser] if a user is signed in, otherwise returns `null`.
+  Future<KdfUser?> get currentUser;
+
+  /// Retrieves a list of all users registered on the device.
+  ///
+  /// Returns a [List] of [KdfUser] objects representing all registered users.
+  Future<List<KdfUser>> getUsers();
+
+  /// Signs out the current user.
+  ///
+  /// Throws [AuthException] if an error occurs during the sign-out process.
+  Future<void> signOut();
+
+  /// Checks whether a user is currently signed in.
+  ///
+  /// Returns `true` if a user is signed in, otherwise `false`.
+  Future<bool> isSignedIn();
+
+  /// Retrieves the encrypted mnemonic of the currently signed-in user.
+  ///
+  /// Throws [AuthException] if an error occurs during retrieval or if no user
+  /// is signed in.
+  Future<Mnemonic> getMnemonicEncrypted();
+
+  /// Retrieves the plain text mnemonic of the currently signed-in user.
+  ///
+  /// A [walletPassword] must be provided to decrypt the mnemonic.
+  /// Throws [AuthException] if an error occurs during retrieval or if no user
+  /// is signed in.
+  Future<Mnemonic> getMnemonicPlainText(String walletPassword);
+
+  /// Changes the password used to encrypt/decrypt the mnemonic.
+  ///
+  /// This is used to change the password that protects the wallet's seed phrase.
+  /// Both the current and new passwords must be provided.
+  ///
+  /// Throws [AuthException] if the current password is incorrect or if no user
+  /// is signed in.
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
+
+  /// Deletes the specified wallet.
+  Future<void> deleteWallet({
+    required String walletName,
+    required String password,
+    WalletDeletionPermit? permit,
+  });
+
+  /// Sets the value of a single key in the active user's metadata.
+  ///
+  /// This preserves any existing metadata, and overwrites the value only for
+  /// the specified key.
+  ///
+  /// Throws an exception if there is no active user.
+  ///
+  /// Setting a value to `null` will remove the key from the metadata.
+  ///
+  /// This does not emit an auth state change event.
+  ///
+  ///
+  /// NB: This is intended to only be a short-term solution until the SDK
+  /// is fully integrated with KW. This may be deprecated in the future.
+  ///
+  /// Example:
+  /// final _komodoDefiSdk = KomodoDefiSdk.global;
+  /// final user = await _komodoDefiSdk.auth.currentUser;
+  /// if (user == null) return;
+  /// final expectedWalletId = user.walletId;
+  ///
+  ///   await _komodoDefiSdk.auth.setOrRemoveActiveUserKeyValue(
+  ///   'custom_tokens',
+  ///   {
+  ///     'tokens': [
+  ///       {
+  ///         'foo': 'bar',
+  ///         'name': 'Foo Token',
+  ///         'symbol': 'FOO',
+  ///         // ...
+  ///       }
+  ///     ],
+  ///   }.toJsonString(),
+  ///   expectedWalletId: expectedWalletId,
+  /// );
+  /// final tokenJson = (await _komodoDefiSdk.auth.currentUser)
+  ///     ?.metadata
+  ///     .valueOrNull<JsonList>('custom_tokens', 'tokens');
+  ///
+  /// print('Custom tokens: $tokenJson');
+
+  /// [expectedWalletId] must be the verified identity captured when the
+  /// operation began, before any asynchronous work whose result is being saved.
+  /// A missing public-key hash in either identity, or a mismatch with the
+  /// freshly resolved active wallet, throws [WalletChangedDisconnectException]
+  /// before metadata is changed. Do not retry against a replacement wallet.
+  Future<void> setOrRemoveActiveUserKeyValue(
+    String key,
+    dynamic value, {
+    required WalletId expectedWalletId,
+  });
+
+  /// Atomically reads the current value of [key] from the active user's
+  /// metadata, applies [transform], and writes the result back.
+  ///
+  /// Safe to call concurrently — uses a dedicated metadata mutex internally.
+  /// [expectedWalletId] follows the same identity requirements as
+  /// [setOrRemoveActiveUserKeyValue]. Identity is checked before [transform]
+  /// runs, while the authentication write lock is held.
+  Future<void> updateActiveUserKeyValue(
+    String key,
+    dynamic Function(dynamic currentValue) transform, {
+    required WalletId expectedWalletId,
+  });
+
+  /// Provides PIN to a Trezor hardware device during authentication.
+  ///
+  /// The [taskId] should be obtained from the authentication state when the
+  /// device requests PIN input. The [pin] should be entered as it appears on
+  /// your keyboard numpad, mapped according to the grid shown on the Trezor device.
+  ///
+  /// This method should only be called when using Trezor authentication and
+  /// the device is requesting PIN input.
+  ///
+  /// Throws [AuthException] if the device is not connected, the task ID is
+  /// invalid, or if an error occurs during PIN provision.
+  Future<void> setHardwareDevicePin(int taskId, String pin);
+
+  /// Provides passphrase to a Trezor hardware device during authentication.
+  ///
+  /// The [taskId] should be obtained from the authentication state when the
+  /// device requests passphrase input. The [passphrase] acts like an additional
+  /// word in your recovery seed. Use an empty string to access the default
+  /// wallet without passphrase.
+  ///
+  /// This method should only be called when using Trezor authentication and
+  /// the device is requesting passphrase input.
+  ///
+  /// Throws [AuthException] if the device is not connected, the task ID is
+  /// invalid, or if an error occurs during passphrase provision.
+  Future<void> setHardwareDevicePassphrase(int taskId, String passphrase);
+
+  /// Cancels an ongoing Trezor hardware device initialization.
+  ///
+  /// The [taskId] should be obtained from the authentication state when the
+  /// device is being initialized. This method allows cancelling the initialization
+  /// process if needed.
+  ///
+  /// This method should only be called when using Trezor authentication and
+  /// there is an active initialization process.
+  ///
+  /// Throws [AuthException] if the task ID is invalid or if an error occurs
+  /// during cancellation.
+  Future<void> cancelHardwareDeviceInitialization(int taskId);
+
+  /// Ensures that KDF is healthy and responsive. If KDF is not healthy,
+  /// attempts to restart it with the current user's configuration.
+  /// This is useful for recovering from situations where KDF has become
+  /// unavailable, especially on mobile platforms after app backgrounding.
+  /// Returns true if KDF is healthy or was successfully restarted, false otherwise.
+  Future<bool> ensureKdfHealthy();
+
+  /// Emits the identity of each wallet as it is deleted.
+  ///
+  /// [deleteWallet] removes the wallet from KDF and from secure storage, but
+  /// callers may hold wallet-scoped caches of their own - derived addresses,
+  /// activation config, transaction history - that outlive it. Those caches are
+  /// keyed by [WalletId], and the identity cannot be recovered after the fact,
+  /// so it is resolved before the deletion and published here.
+  ///
+  /// Broadcast, and emitted only after the deletion succeeds - including its
+  /// registered [onWalletDeletion] hooks. A stream listener runs *after*
+  /// [deleteWallet] has already returned, so anything that must be purged
+  /// before the caller can act on the deletion belongs in a hook, not here.
+  Stream<WalletId> get walletDeletions;
+
+  /// Registers [hook] to run - and be awaited - inside [deleteWallet], after
+  /// KDF and secure storage no longer know the wallet but before the call
+  /// returns.
+  ///
+  /// This is what makes deletion safe to chain: a caller that deletes and
+  /// immediately recreates the same wallet must not have a still-running
+  /// purge sweep away the new wallet's freshly persisted pubkeys, activation
+  /// config, or history. A [walletDeletions] listener cannot give that
+  /// guarantee - it is not awaited - so purge owners register here and the
+  /// stream stays for passive observers.
+  ///
+  /// Hook failures are contained and logged by the caller of the hook:
+  /// purging is best-effort, and a cache that will not clear must not make
+  /// the wallet look undeleted.
+  ///
+  /// Hooks run while [deleteWallet] holds the wallet catalog lock, which is
+  /// not re-entrant. A hook must never wait - directly, or through a cache it
+  /// opens - on [getUsers], registration or another deletion: that deadlocks
+  /// the deletion.
+  void onWalletDeletion(Future<void> Function(WalletId walletId) hook);
+
+  /// Disposes of any resources held by the authentication service.
+  ///
+  /// This method should be called when the authentication service is no longer
+  /// needed to clean up resources.
+  Future<void> dispose();
+}
+
+class KomodoDefiLocalAuth implements KomodoDefiAuth {
+  KomodoDefiLocalAuth({
+    required KomodoDefiFramework kdf,
+    required IKdfHostConfig hostConfig,
+    bool allowRegistrations = true,
+  }) : _allowRegistrations = allowRegistrations,
+       _authService = KdfAuthService(kdf, hostConfig) {
+    _trezorAuthService = TrezorAuthService(_authService, TrezorRepository(kdf));
+  }
+
+  final SecureLocalStorage _secureStorage = SecureLocalStorage();
+  final _walletDeletions = StreamController<WalletId>.broadcast();
+  final _walletDeletionHooks = <Future<void> Function(WalletId)>[];
+  Object? _walletDeletionAuthority;
+
+  /// Installs the sole coordinator allowed to authorize SDK wallet deletion.
+  void requireWalletDeletionReview(Object authority) {
+    if (_walletDeletionAuthority != null &&
+        !identical(authority, _walletDeletionAuthority)) {
+      throw StateError('A wallet deletion coordinator is already installed');
+    }
+    _walletDeletionAuthority = authority;
+  }
+
+  WalletDeletionPermit authorizeWalletDeletion(
+    Object authority,
+    Future<void> Function(KdfUser target) validate,
+  ) {
+    if (!identical(authority, _walletDeletionAuthority)) {
+      throw const WalletDeletionReviewRequiredException();
+    }
+    return WalletDeletionPermit._(authority, validate);
+  }
+
+  final bool _allowRegistrations;
+  late final IAuthService _authService;
+  late final TrezorAuthService _trezorAuthService;
+  bool _initialized = false;
+
+  @override
+  Future<AuthSessionContext> captureSessionContext() =>
+      _authService.captureSessionContext();
+
+  @override
+  bool isSessionContextCurrent(AuthSessionContext context) =>
+      _authService.isSessionContextCurrent(context);
+
+  @override
+  void ensureSessionContextCurrent(AuthSessionContext context) =>
+      _authService.ensureSessionContextCurrent(context);
+
+  @override
+  Stream<AuthSessionContext?> watchSessionContext() =>
+      _authService.watchSessionContext();
+
+  @override
+  Future<KdfUser> updateMetadataForSession(
+    AuthSessionContext context,
+    Map<String, dynamic> updates,
+  ) => _authService.updateMetadataForSession(context, updates);
+
+  @override
+  int get authGeneration => _authService.authGeneration;
+
+  @override
+  Stream<int> get authGenerationChanges => _authService.authGenerationChanges;
+
+  @override
+  bool get isAuthTransitionInProgress =>
+      _authService.isAuthTransitionInProgress;
+
+  Future<T> _runAuthTransition<T>(Future<T> Function() operation) async {
+    _authService.beginAuthTransition();
+    try {
+      return await operation();
+    } finally {
+      _authService.endAuthTransition();
+    }
+  }
+
+  Stream<T> _runAuthTransitionStream<T>(Stream<T> Function() operation) async* {
+    _authService.beginAuthTransition();
+    try {
+      yield* operation();
+    } finally {
+      _authService.endAuthTransition();
+    }
+  }
+
+  @override
+  Future<void> ensureInitialized() async {
+    if (_initialized) return;
+    await _authService.getActiveUser();
+    _initialized = true;
+  }
+
+  // Save AuthOptions when registering or signing in
+  @override
+  Future<KdfUser> signIn({
+    required String walletName,
+    required String password,
+    AuthOptions options = const AuthOptions(
+      derivationMethod: DerivationMethod.hdWallet,
+    ),
+  }) => _runAuthTransition(
+    () => _signIn(walletName: walletName, password: password, options: options),
+  );
+
+  Future<KdfUser> _signIn({
+    required String walletName,
+    required String password,
+    AuthOptions options = const AuthOptions(
+      derivationMethod: DerivationMethod.hdWallet,
+    ),
+  }) async {
+    await ensureInitialized();
+    await _assertAuthState(false);
+
+    // Trezor is not supported in non-stream functions
+    if (options.privKeyPolicy == const PrivateKeyPolicy.trezor()) {
+      throw AuthException(
+        'Trezor authentication requires using signInStream() method '
+        'to handle device interactions (PIN, passphrase) asynchronously',
+        type: AuthExceptionType.generalAuthError,
+      );
+    }
+
+    await _secureStorage.updateUser(walletName, (user) {
+      if (user == null) throw AuthException.notFound();
+      return user.copyWith(
+        walletId: user.walletId.copyWith(authOptions: options),
+      );
+    });
+
+    return _authService.signIn(
+      walletName: walletName,
+      password: password,
+      options: options,
+    );
+  }
+
+  @override
+  Stream<AuthenticationState> signInStream({
+    required String walletName,
+    required String password,
+    AuthOptions options = const AuthOptions(
+      derivationMethod: DerivationMethod.hdWallet,
+    ),
+  }) => _runAuthTransitionStream(
+    () => _signInStream(
+      walletName: walletName,
+      password: password,
+      options: options,
+    ),
+  );
+
+  Stream<AuthenticationState> _signInStream({
+    required String walletName,
+    required String password,
+    AuthOptions options = const AuthOptions(
+      derivationMethod: DerivationMethod.hdWallet,
+    ),
+  }) async* {
+    await ensureInitialized();
+    await _assertAuthState(false);
+
+    if (options.privKeyPolicy == const PrivateKeyPolicy.trezor()) {
+      // Trezor requires streaming to handle interactive device prompts
+      yield* _trezorAuthService.signInStreamed(options: options);
+    } else {
+      yield* _handleRegularSignIn(
+        walletName: walletName,
+        password: password,
+        options: options,
+      );
+    }
+  }
+
+  static Future<AuthOptions?> storedAuthOptions(String walletName) async =>
+      (await SecureLocalStorage().getUser(walletName))?.walletId.authOptions;
+
+  @override
+  Future<KdfUser> register({
+    required String walletName,
+    required String password,
+    AuthOptions options = const AuthOptions(
+      derivationMethod: DerivationMethod.hdWallet,
+    ),
+    Mnemonic? mnemonic,
+    Map<String, dynamic> initialMetadata = const {},
+  }) => _runAuthTransition(
+    () => _register(
+      walletName: walletName,
+      password: password,
+      options: options,
+      mnemonic: mnemonic,
+      initialMetadata: initialMetadata,
+    ),
+  );
+
+  Future<KdfUser> _register({
+    required String walletName,
+    required String password,
+    AuthOptions options = const AuthOptions(
+      derivationMethod: DerivationMethod.hdWallet,
+    ),
+    Mnemonic? mnemonic,
+    Map<String, dynamic> initialMetadata = const {},
+  }) async {
+    await ensureInitialized();
+    await _assertAuthState(false);
+
+    if (!_allowRegistrations) {
+      throw AuthException(
+        'Registration is not allowed.',
+        type: AuthExceptionType.registrationNotAllowed,
+      );
+    }
+
+    // Trezor is not supported in non-stream functions
+    if (options.privKeyPolicy == const PrivateKeyPolicy.trezor()) {
+      throw AuthException(
+        'Trezor registration requires using registerStream() method '
+        'to handle device interactions (PIN, passphrase) asynchronously',
+        type: AuthExceptionType.generalAuthError,
+      );
+    }
+
+    final user = await _authService.register(
+      walletName: walletName,
+      password: password,
+      options: options,
+      mnemonic: mnemonic,
+      initialMetadata: initialMetadata,
+    );
+
+    return user;
+  }
+
+  @override
+  Stream<AuthenticationState> registerStream({
+    required String walletName,
+    required String password,
+    AuthOptions options = const AuthOptions(
+      derivationMethod: DerivationMethod.hdWallet,
+    ),
+    Mnemonic? mnemonic,
+    Map<String, dynamic> initialMetadata = const {},
+  }) => _runAuthTransitionStream(
+    () => _registerStream(
+      walletName: walletName,
+      password: password,
+      options: options,
+      mnemonic: mnemonic,
+      initialMetadata: initialMetadata,
+    ),
+  );
+
+  Stream<AuthenticationState> _registerStream({
+    required String walletName,
+    required String password,
+    AuthOptions options = const AuthOptions(
+      derivationMethod: DerivationMethod.hdWallet,
+    ),
+    Mnemonic? mnemonic,
+    Map<String, dynamic> initialMetadata = const {},
+  }) async* {
+    await ensureInitialized();
+    await _assertAuthState(false);
+
+    if (!_allowRegistrations) {
+      yield AuthenticationState.error('Registration is not allowed');
+      return;
+    }
+
+    if (options.privKeyPolicy == const PrivateKeyPolicy.trezor()) {
+      // Trezor requires streaming to handle interactive device prompts
+      yield* _trezorAuthService.registerStream(
+        options: options,
+        mnemonic: mnemonic,
+        initialMetadata: initialMetadata,
+      );
+    } else {
+      yield* _handleRegularRegister(
+        walletName: walletName,
+        password: password,
+        options: options,
+        mnemonic: mnemonic,
+        initialMetadata: initialMetadata,
+      );
+    }
+  }
+
+  Stream<AuthenticationState> _handleRegularSignIn({
+    required String walletName,
+    required String password,
+    required AuthOptions options,
+  }) async* {
+    try {
+      yield const AuthenticationState(
+        status: AuthenticationStatus.authenticating,
+      );
+      final user = await signIn(
+        walletName: walletName,
+        password: password,
+        options: options,
+      );
+      yield AuthenticationState.completed(user);
+    } catch (e) {
+      yield AuthenticationState.error('Sign-in failed: $e');
+    }
+  }
+
+  Stream<AuthenticationState> _handleRegularRegister({
+    required String walletName,
+    required String password,
+    required AuthOptions options,
+    Mnemonic? mnemonic,
+    Map<String, dynamic> initialMetadata = const {},
+  }) async* {
+    try {
+      yield const AuthenticationState(
+        status: AuthenticationStatus.authenticating,
+      );
+      final user = await register(
+        walletName: walletName,
+        password: password,
+        options: options,
+        mnemonic: mnemonic,
+        initialMetadata: initialMetadata,
+      );
+      yield AuthenticationState.completed(user);
+    } catch (e) {
+      yield AuthenticationState.error('Registration failed: $e');
+    }
+  }
+
+  @override
+  Stream<KdfUser?> get authStateChanges async* {
+    await ensureInitialized();
+    yield* _authService.authStateChanges;
+  }
+
+  @override
+  Stream<KdfUser?> watchCurrentUser() async* {
+    await ensureInitialized();
+
+    // Emit the current user state as the initial value
+    yield await _authService.getActiveUser();
+
+    // Then emit subsequent changes
+    yield* _authService.authStateChanges;
+  }
+
+  @override
+  Future<KdfUser?> get currentUser async {
+    await ensureInitialized();
+    return _authService.getActiveUser();
+  }
+
+  @override
+  Future<List<KdfUser>> getUsers() async {
+    await ensureInitialized();
+
+    return _authService.getUsers();
+  }
+
+  @override
+  Future<void> signOut() => _runAuthTransition(_signOut);
+
+  Future<void> _signOut() async {
+    await ensureInitialized();
+    await _assertAuthState(true);
+
+    try {
+      await _authService.signOut();
+    } on AuthException {
+      rethrow;
+    } catch (e) {
+      throw AuthException(
+        'An unexpected error occurred while signing out: $e',
+        type: AuthExceptionType.generalAuthError,
+      );
+    }
+  }
+
+  @override
+  Future<bool> isSignedIn() async {
+    await ensureInitialized();
+    return _authService.isSignedIn();
+  }
+
+  @override
+  Future<Mnemonic> getMnemonicEncrypted() async {
+    await ensureInitialized();
+    await _assertAuthState(true);
+
+    try {
+      return await _authService.getMnemonic(
+        encrypted: true,
+        walletPassword: null,
+      );
+    } on AuthException {
+      rethrow;
+    } catch (_) {
+      throw AuthException(
+        'Failed to retrieve mnemonic',
+        type: AuthExceptionType.generalAuthError,
+      );
+    }
+  }
+
+  @override
+  Future<Mnemonic> getMnemonicPlainText(String walletPassword) async {
+    await ensureInitialized();
+    await _assertAuthState(true);
+
+    try {
+      return await _authService.getMnemonic(
+        encrypted: false,
+        walletPassword: walletPassword,
+      );
+    } on AuthException {
+      rethrow;
+    } catch (_) {
+      throw AuthException(
+        'Failed to retrieve mnemonic',
+        type: AuthExceptionType.generalAuthError,
+      );
+    }
+  }
+
+  @override
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await ensureInitialized();
+    await _assertAuthState(true);
+
+    try {
+      await _authService.updatePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+    } on AuthException {
+      rethrow;
+    } catch (e) {
+      throw AuthException(
+        'An unexpected error occurred while changing the password: $e',
+        type: AuthExceptionType.generalAuthError,
+      );
+    }
+  }
+
+  @override
+  Stream<WalletId> get walletDeletions => _walletDeletions.stream;
+
+  @override
+  void onWalletDeletion(Future<void> Function(WalletId walletId) hook) {
+    _walletDeletionHooks.add(hook);
+  }
+
+  @override
+  Future<void> deleteWallet({
+    required String walletName,
+    required String password,
+    WalletDeletionPermit? permit,
+  }) async {
+    if (_walletDeletionAuthority != null &&
+        (permit == null ||
+            permit._used ||
+            !identical(permit._issuer, _walletDeletionAuthority))) {
+      throw const WalletDeletionReviewRequiredException();
+    }
+    if (permit != null) permit._used = true;
+    await ensureInitialized();
+    late WalletId deleted;
+    Object? reviewError;
+    try {
+      await _authService.deleteWallet(
+        walletName: walletName,
+        password: password,
+        beforeDelete: (target) async {
+          deleted = target.walletId;
+          try {
+            await permit?._validate(target);
+          } catch (error) {
+            reviewError = error;
+            rethrow;
+          }
+        },
+        afterDelete: () async {
+          // The catalog lock remains held until cleanup completes. A concurrent
+          // recreation cannot have fresh caches erased by this deletion.
+          // Each purge is best-effort and independent.
+          for (final hook in _walletDeletionHooks) {
+            try {
+              await hook(deleted);
+            } on Object catch (error) {
+              log(
+                'Wallet-deletion hook failed (${error.runtimeType})',
+                name: 'KomodoDefiLocalAuth',
+              );
+            }
+          }
+          if (!_walletDeletions.isClosed) {
+            _walletDeletions.add(deleted);
+          }
+        },
+      );
+    } on AuthException {
+      rethrow;
+    } catch (e) {
+      if (identical(e, reviewError)) rethrow;
+      throw AuthException(
+        'An unexpected error occurred while deleting the wallet: $e',
+        type: AuthExceptionType.generalAuthError,
+      );
+    }
+  }
+
+  @override
+  Future<void> setOrRemoveActiveUserKeyValue(
+    String key,
+    dynamic value, {
+    required WalletId expectedWalletId,
+  }) async {
+    await _authService.updateActiveUserMetadataKey(
+      key,
+      (_) => value,
+      expectedWalletId: expectedWalletId,
+    );
+  }
+
+  @override
+  Future<void> updateActiveUserKeyValue(
+    String key,
+    dynamic Function(dynamic currentValue) transform, {
+    required WalletId expectedWalletId,
+  }) async {
+    await _authService.updateActiveUserMetadataKey(
+      key,
+      transform,
+      expectedWalletId: expectedWalletId,
+    );
+  }
+
+  @override
+  Future<void> setHardwareDevicePin(int taskId, String pin) async {
+    await ensureInitialized();
+
+    try {
+      await _trezorAuthService.provideTrezorPin(taskId, pin);
+    } catch (e) {
+      if (e is AuthException) {
+        rethrow;
+      }
+      throw AuthException(
+        'Failed to provide PIN to hardware device: $e',
+        type: AuthExceptionType.generalAuthError,
+      );
+    }
+  }
+
+  @override
+  Future<void> setHardwareDevicePassphrase(
+    int taskId,
+    String passphrase,
+  ) async {
+    await ensureInitialized();
+
+    try {
+      await _trezorAuthService.provideTrezorPassphrase(taskId, passphrase);
+    } catch (e) {
+      if (e is AuthException) {
+        rethrow;
+      }
+      throw AuthException(
+        'Failed to provide passphrase to hardware device: $e',
+        type: AuthExceptionType.generalAuthError,
+      );
+    }
+  }
+
+  @override
+  Future<void> cancelHardwareDeviceInitialization(int taskId) async {
+    await ensureInitialized();
+
+    try {
+      await _trezorAuthService.cancelTrezorInitialization(taskId);
+    } catch (e) {
+      throw AuthException(
+        'Failed to cancel hardware device initialization: $e',
+        type: AuthExceptionType.generalAuthError,
+      );
+    }
+  }
+
+  Future<void> _assertAuthState(bool expected) async {
+    await ensureInitialized();
+    final signedIn = await isSignedIn();
+    if (signedIn != expected) {
+      throw AuthException(
+        'User is ${signedIn ? 'signed in' : 'not signed in'}.',
+        type: signedIn
+            ? AuthExceptionType.alreadySignedIn
+            : AuthExceptionType.unauthorized,
+      );
+    }
+  }
+
+  @override
+  Future<bool> ensureKdfHealthy() async {
+    await ensureInitialized();
+    return _authService.ensureKdfHealthy();
+  }
+
+  @override
+  Future<void> dispose() => _runAuthTransition(_dispose);
+
+  Future<void> _dispose() async {
+    await _walletDeletions.close();
+    await _authService.dispose();
+  }
+}

@@ -1,0 +1,329 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:komodo_defi_framework/src/native/windows_kdf_endpoint_stub.dart'
+    if (dart.library.ffi) 'package:komodo_defi_framework/src/native/windows_kdf_endpoint.dart';
+import 'package:komodo_defi_framework/src/config/kdf_config.dart';
+import 'sse_diagnostics.dart';
+import 'package:komodo_defi_types/komodo_defi_type_utils.dart';
+
+typedef EventStreamUnsubscribe = Future<void> Function();
+
+// Default client ID used for SSE connections
+const int _kDefaultClientId = 0;
+
+Uri _buildEventsUrl(
+  IKdfHostConfig hostConfig, {
+  int clientId = _kDefaultClientId,
+}) {
+  // Every host config now carries an rpcUrl, so this no longer needs a
+  // RemoteConfig special case with a hardcoded 127.0.0.1:7783 fallback. That
+  // fallback was the last thing pinning a locally started KDF to one port: the
+  // RPC client could be pointed elsewhere and the event stream would still
+  // dial 7783, silently attaching to whichever KDF happened to be there.
+  final Uri base = hostConfig.rpcUrl;
+  return base.replace(
+    pathSegments: <String>[...base.pathSegments, 'event-stream'],
+    queryParameters: {'id': clientId.toString()},
+  );
+}
+
+/// Production-visible logger that always logs (not behind kDebugMode)
+void _log(String msg) {
+  // Production-visible logging - always print for critical SSE lifecycle events
+  print('[EventStream][IO] $msg');
+}
+
+/// Performs a preflight RPC check to ensure KDF is ready before SSE connection
+Future<bool> _preflightCheck(IKdfHostConfig cfg) async {
+  try {
+    if (cfg is LocalConfig &&
+        (cfg.supervisedVersion != null ||
+            (Platform.isWindows && kUseLegacyKdf))) {
+      return await cfg.supervisedVersion?.call() != null;
+    }
+    _log('Preflight: Checking KDF availability...');
+    final client = HttpClient();
+    try {
+      final uri = cfg.rpcUrl;
+
+      final request = await client.postUrl(uri);
+      request.headers.set('Content-Type', 'application/json');
+
+      // Simple version check to verify KDF is responding
+      final payload = jsonEncode({
+        'userpass': cfg.rpcPassword,
+        'method': 'version',
+      });
+      request.write(payload);
+
+      final response = await request.close().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          _log('Preflight: Timeout waiting for KDF response');
+          throw TimeoutException('KDF version check timeout');
+        },
+      );
+
+      if (response.statusCode == 200) {
+        _log('Preflight: KDF is ready (status ${response.statusCode})');
+        await response.drain<void>();
+        return true;
+      } else {
+        _log('Preflight: KDF returned status ${response.statusCode}');
+        await response.drain<void>();
+        return false;
+      }
+    } finally {
+      client.close();
+    }
+  } catch (_) {
+    _log('Preflight: Failed');
+    return false;
+  }
+}
+
+/// Verifies SSE handshake by checking HTTP status and content-type
+Future<bool> _verifyHandshake(HttpClientResponse response) async {
+  if (response.statusCode != 200) {
+    _log('Handshake: Failed - HTTP ${response.statusCode}');
+    return false;
+  }
+
+  final contentType = response.headers.contentType?.toString() ?? '';
+  if (!contentType.contains('text/event-stream')) {
+    _log('Handshake: Failed - Invalid content-type');
+    return false;
+  }
+
+  _log('Handshake: Success - HTTP 200, event-stream');
+  return true;
+}
+
+EventStreamUnsubscribe connectEventStream({
+  required void Function(Object? data) onMessage,
+  required void Function() onFirstByte,
+  required void Function({required bool registrationsMayPersist})
+  onDisconnected,
+  IKdfHostConfig? hostConfig,
+  SseConnectionTrace? trace,
+  int clientId = _kDefaultClientId,
+}) {
+  final IKdfHostConfig cfg = hostConfig!;
+  final Uri url = _buildEventsUrl(cfg, clientId: clientId);
+  bool isClosed = false;
+  bool unexpectedDisconnectNotified = false;
+  HttpClient? httpClient;
+  HttpClientRequest? request;
+  StreamSubscription<String>? streamSubscription;
+  Future<void>? cleanupFuture;
+  final buffer = StringBuffer();
+  int? pendingFrame;
+
+  _log('SSE Start: Initializing connection');
+
+  Future<void> cleanup() => cleanupFuture ??= () async {
+    request?.abort();
+    await streamSubscription?.cancel();
+    httpClient?.close(force: true);
+  }();
+
+  void notifyUnexpectedDisconnect(String reason, SseReason cause) {
+    if (isClosed || unexpectedDisconnectNotified) return;
+    unexpectedDisconnectNotified = true;
+    _log(reason);
+    if (pendingFrame != null) {
+      trace?.record(
+        SseStage.rejected,
+        frame: pendingFrame,
+        reason: SseReason.incompleteFrame,
+      );
+      pendingFrame = null;
+      buffer.clear();
+    }
+    trace?.record(SseStage.disconnected, reason: cause);
+    // A native SSE close drops KDF's client-scoped stream registrations.
+    // Notify before cleanup/reconnect so the SDK invalidates its generation
+    // and never submits against a stale streamer.
+    try {
+      onDisconnected(registrationsMayPersist: false);
+    } catch (_) {
+      _log('SSE disconnect callback failed');
+    }
+    unawaited(cleanup());
+  }
+
+  Future<void> start() async {
+    if (isClosed) return;
+
+    try {
+      // Step 1: Preflight RPC check
+      final lease = WindowsKdfEndpoint.streams[cfg]?.call();
+      final requiresLease =
+          cfg is LocalConfig &&
+          Platform.isWindows &&
+          (cfg.supervisedVersion != null || kUseLegacyKdf);
+      if (requiresLease && lease == null)
+        throw StateError('No supervised SSE transport');
+      bool valid() =>
+          !isClosed && !unexpectedDisconnectNotified && (lease?.$2() ?? true);
+      final preflightOk = await _preflightCheck(cfg);
+      if (isClosed) return;
+      if (!preflightOk || !valid()) {
+        notifyUnexpectedDisconnect(
+          'SSE Start: Preflight check failed',
+          SseReason.preflight,
+        );
+        return;
+      }
+
+      // Step 2: Open SSE connection with proper handshake verification
+      final client = (lease?.$1() ?? HttpClient())
+        ..connectionTimeout = const Duration(seconds: 10);
+      if (isClosed) {
+        client.close(force: true);
+        return;
+      }
+      httpClient = client;
+
+      _log('SSE Start: Opening connection');
+      final pendingRequest = await client.getUrl(url);
+      if (!valid()) {
+        pendingRequest.abort();
+        client.close(force: true);
+        throw StateError('SSE generation changed');
+      }
+      if (lease != null) pendingRequest.followRedirects = false;
+      request = pendingRequest
+        ..headers.set('Accept', 'text/event-stream')
+        ..headers.set('Cache-Control', 'no-cache')
+        ..headers.set('Connection', 'keep-alive');
+
+      final response = await pendingRequest.close().timeout(
+        const Duration(seconds: 10),
+      );
+      if (isClosed) {
+        client.close(force: true);
+        return;
+      }
+
+      // Step 3: Verify handshake
+      final handshakeOk = await _verifyHandshake(response);
+      if (isClosed) {
+        client.close(force: true);
+        return;
+      }
+      if (!handshakeOk || !valid()) {
+        if (isClosed) return;
+        notifyUnexpectedDisconnect(
+          'SSE Start: Handshake verification failed',
+          SseReason.handshake,
+        );
+        return;
+      }
+
+      // Step 4: Connection established, start listening to events
+      _log('SSE Connected: Connection established');
+      trace?.record(SseStage.handshake);
+      // HTTP 200 + text/event-stream means KDF has registered this client.
+      // Waiting for an application event deadlocks a clean runtime because no
+      // streamer can emit until its enable RPC is sent.
+      onFirstByte();
+      _log('SSE Connected: KDF client registration is ready');
+
+      // Parse SSE stream
+      streamSubscription = response
+          .transform(utf8.decoder)
+          .transform(const LineSplitter())
+          .listen(
+            (line) {
+              if (!valid()) {
+                notifyUnexpectedDisconnect(
+                  'SSE generation changed',
+                  SseReason.staleGeneration,
+                );
+                return;
+              }
+
+              if (line.isEmpty) {
+                if (buffer.isNotEmpty) {
+                  final data = buffer.toString();
+                  buffer.clear();
+                  final frame = pendingFrame;
+                  pendingFrame = null;
+                  trace?.record(SseStage.received, frame: frame);
+                  final Object? decoded;
+                  try {
+                    decoded = jsonFromString(data);
+                  } catch (_) {
+                    trace?.record(
+                      SseStage.rejected,
+                      frame: frame,
+                      reason: SseReason.invalidJson,
+                    );
+                    _log('SSE Data: Event processing failed');
+                    return;
+                  }
+                  try {
+                    onMessage(
+                      frame == null ? decoded : TracedSseFrame(frame, decoded),
+                    );
+                  } catch (_) {
+                    trace?.record(
+                      SseStage.rejected,
+                      frame: frame,
+                      reason: SseReason.invalidEvent,
+                    );
+                    _log('SSE Data: Event processing failed');
+                  }
+                }
+              } else if (line.startsWith('data:')) {
+                // SSE joins data fields with newlines and dispatches only at
+                // the blank frame delimiter. One space after ':' is optional.
+                var data = line.substring(5);
+                if (data.startsWith(' ')) data = data.substring(1);
+                pendingFrame ??= trace?.nextFrame();
+                buffer.writeln(data);
+              }
+            },
+            onError: (Object _) {
+              notifyUnexpectedDisconnect(
+                'SSE Error: Transport failed',
+                SseReason.transport,
+              );
+            },
+            onDone: () {
+              notifyUnexpectedDisconnect(
+                'SSE Done: Connection closed by server',
+                SseReason.serverClosed,
+              );
+            },
+            cancelOnError: false,
+          );
+    } catch (_) {
+      if (isClosed) return;
+      notifyUnexpectedDisconnect(
+        'SSE Start: Connection failed',
+        SseReason.connection,
+      );
+    }
+  }
+
+  // Start connection asynchronously
+  unawaited(start());
+
+  return () async {
+    if (isClosed) return;
+    isClosed = true;
+    _log('SSE Disconnect: Closing connection');
+    if (!unexpectedDisconnectNotified) {
+      trace?.record(SseStage.disconnected, reason: SseReason.manual);
+    }
+    try {
+      await cleanup();
+    } catch (_) {
+      _log('SSE Disconnect: Cleanup failed');
+    }
+  };
+}

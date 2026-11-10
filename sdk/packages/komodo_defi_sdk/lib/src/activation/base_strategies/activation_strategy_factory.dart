@@ -1,0 +1,65 @@
+import 'package:komodo_defi_rpc_methods/komodo_defi_rpc_methods.dart';
+import 'package:komodo_defi_sdk/src/activation/_activation.dart';
+import 'package:komodo_defi_sdk/src/activation_config/activation_config_service.dart';
+import 'package:komodo_defi_sdk/src/assets/activated_assets_cache.dart';
+import 'package:komodo_defi_types/komodo_defi_types.dart';
+
+/// Factory for creating the complete activation strategy stack
+class ActivationStrategyFactory {
+  /// Creates a complete activation strategy stack with all protocols
+  /// and returns a [SmartAssetActivator] instance.
+  /// [client] The [ApiClient] to use for RPC calls.
+  /// [privKeyPolicy] The [PrivateKeyPolicy] to use for private key management.
+  /// This is used for external wallet support. E.g. trezor, wallet connect, etc
+  /// [configService] The [ActivationConfigService] for resolving activation configuration.
+  /// [activatedAssetsCache] The [ActivatedAssetsCache] to use for checking activation status.
+  /// [hdGapLimit] The HD address gap KDF should walk during activation. Omit
+  /// and each protocol falls back to the full BIP-44 gap. See `HdGapLimit`.
+  static SmartAssetActivator createStrategy(
+    ApiClient client,
+    PrivateKeyPolicy privKeyPolicy,
+    ActivationConfigService configService,
+    ActivatedAssetsCache activatedAssetsCache, {
+    TronGaslessProviderConfig? tronGaslessProvider,
+    int? hdGapLimit,
+  }) {
+    return SmartAssetActivator(
+      client,
+      CompositeAssetActivator(client, [
+        // BCH strategy needs to be before UTXO strategy to handle the special case
+        // BchActivationStrategy(client),
+        UtxoActivationStrategy(client, privKeyPolicy, hdGapLimit: hdGapLimit),
+        EthTaskActivationStrategy(
+          client,
+          privKeyPolicy,
+          tronGaslessProvider: tronGaslessProvider,
+          hdGapLimit: hdGapLimit,
+        ),
+        EthWithTokensActivationStrategy(
+          client,
+          privKeyPolicy,
+          tronGaslessProvider: tronGaslessProvider,
+          hdGapLimit: hdGapLimit,
+        ),
+        Erc20ActivationStrategy(
+          client,
+          privKeyPolicy,
+          tronGaslessProvider: tronGaslessProvider,
+        ),
+        // SlpActivationStrategy(client),
+        // Tendermint strategies follow same pattern as ETH: task -> platform -> tokens
+        TendermintTaskActivationStrategy(client, privKeyPolicy),
+        TendermintWithTokensActivationStrategy(client, privKeyPolicy),
+        TendermintTokenActivationStrategy(client, privKeyPolicy),
+        QtumActivationStrategy(client, privKeyPolicy, hdGapLimit: hdGapLimit),
+        SiaActivationStrategy(client),
+        ZhtlcActivationStrategy(client, privKeyPolicy, configService),
+        CustomErc20ActivationStrategy(
+          client,
+          tronGaslessProvider: tronGaslessProvider,
+        ),
+      ]),
+      activatedAssetsCache,
+    );
+  }
+}

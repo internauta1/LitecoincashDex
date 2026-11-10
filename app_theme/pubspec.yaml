@@ -1,0 +1,15 @@
+name: app_theme
+description: App theme.
+version: 0.0.1
+# homepage:
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.8.1 <4.0.0"
+  flutter: ">=3.41.4 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: 2.1.8 # flutter.dev

@@ -1,0 +1,288 @@
+import 'dart:developer' show log;
+import 'package:komodo_defi_framework/komodo_defi_framework.dart';
+
+import 'package:komodo_defi_rpc_methods/komodo_defi_rpc_methods.dart';
+import 'package:komodo_defi_sdk/src/activation/_activation.dart';
+import 'package:komodo_defi_sdk/src/transaction_history/strategies/etherscan_transaction_history_strategy.dart'
+    show EtherscanProtocolHelper;
+import 'package:komodo_defi_types/komodo_defi_types.dart';
+
+class EthTaskActivationStrategy extends ProtocolActivationStrategy {
+  const EthTaskActivationStrategy(
+    super.client,
+    this.privKeyPolicy, {
+    this.hdGapLimit,
+    this.tronGaslessProvider,
+  });
+
+  /// The private key management policy to use for this strategy.
+  /// Used for external wallet support.
+  final PrivateKeyPolicy privKeyPolicy;
+
+  /// The HD address gap KDF should walk during activation. See `HdGapLimit`.
+  final int? hdGapLimit;
+
+  /// Optional provider attached to task-based TRX activation.
+  ///
+  /// KDF accepts the same documented provider and token GasFree fields for
+  /// task and non-task activation requests.
+  final TronGaslessProviderConfig? tronGaslessProvider;
+
+  @override
+  Set<CoinSubClass> get supportedProtocols => {
+    CoinSubClass.trx,
+    CoinSubClass.erc20,
+    CoinSubClass.grc20,
+    CoinSubClass.bep20,
+    CoinSubClass.ftm20,
+    CoinSubClass.polygon,
+    CoinSubClass.avx20,
+    CoinSubClass.hrc20,
+    CoinSubClass.moonbeam,
+    CoinSubClass.moonriver,
+    CoinSubClass.ethereumClassic,
+    CoinSubClass.ubiq,
+    CoinSubClass.krc20,
+    CoinSubClass.ewt,
+    CoinSubClass.hecoChain,
+    CoinSubClass.rskSmartBitcoin,
+    CoinSubClass.arbitrum,
+    CoinSubClass.base,
+  };
+
+  @override
+  bool get supportsBatchActivation => true;
+
+  @override
+  bool canHandle(Asset asset) {
+    // Use task-based activation for Trezor private key policy
+    return privKeyPolicy == const PrivateKeyPolicy.trezor() &&
+        super.canHandle(asset);
+  }
+
+  @override
+  Stream<ActivationProgress> activate(
+    Asset asset, [
+    List<Asset>? children,
+  ]) async* {
+    final protocol = asset.protocol;
+
+    yield ActivationProgress(
+      status: 'Starting ${asset.id.name} activation...',
+      progressDetails: ActivationProgressDetails(
+        currentStep: ActivationStep.initialization,
+        stepCount: 5,
+        additionalInfo: {
+          'chainType': protocol.subClass.formatted,
+          'contractAddress': protocol.contractAddress,
+          'nodes': protocol.requiredServers.electrum?.length ?? 0,
+        },
+      ),
+    );
+
+    try {
+      yield const ActivationProgress(
+        status: 'Validating protocol configuration...',
+        progressPercentage: 20,
+        progressDetails: ActivationProgressDetails(
+          currentStep: ActivationStep.validation,
+          stepCount: 5,
+        ),
+      );
+
+      // Compute tx_history flag similar to non-task strategy
+      final txHistoryFlag = asset.supportsTxHistoryStreaming
+          ? true
+          : const EtherscanProtocolHelper().shouldEnableTransactionHistory(
+              asset,
+            );
+
+      final tokenRequests = _tokenRequestsFor(asset, children);
+      final activationParams = switch (asset.protocol) {
+        final Erc20Protocol _ =>
+          EthWithTokensActivationParams.fromJson(
+            asset.protocol.config,
+          ).copyWith(
+            erc20Tokens: tokenRequests,
+            txHistory: txHistoryFlag,
+            privKeyPolicy: privKeyPolicy,
+            // Sent explicitly: KDF defaults an absent gap_limit to 20, so
+            // omitting it left the ETH-family walk outside the gap policy.
+            gapLimit: hdGapLimit,
+          ),
+        final TrxProtocol _ =>
+          TrxWithTokensActivationParams.fromJson(
+            asset.protocol.config,
+          ).copyWith(
+            tokenRequests: tokenRequests,
+            txHistory: txHistoryFlag,
+            privKeyPolicy: privKeyPolicy,
+            tronGaslessProvider: tronGaslessProvider,
+          ),
+        _ => throw UnsupportedError(
+          'Unsupported platform protocol for task activation: '
+          '${asset.protocol.runtimeType}',
+        ),
+      };
+
+      // Debug logging for ETH task-based activation
+      if (KdfLoggingConfig.verboseLogging) {
+        log('Activation started', name: 'EthTaskActivationStrategy');
+        log('Activation request prepared', name: 'EthTaskActivationStrategy');
+      }
+
+      final taskResponse = await client.rpc.erc20.enableEthInit(
+        ticker: asset.id.id,
+        params: activationParams,
+      );
+
+      if (KdfLoggingConfig.verboseLogging) {
+        log('Activation task started', name: 'EthTaskActivationStrategy');
+      }
+
+      yield ActivationProgress(
+        status: 'Establishing network connections...',
+        progressPercentage: 40,
+        progressDetails: ActivationProgressDetails(
+          currentStep: ActivationStep.connection,
+          stepCount: 5,
+          additionalInfo: {
+            'nodes': protocol.requiredServers.toJsonRequest(),
+            'protocolType': protocol.subClass.formatted,
+            'tokenCount': children?.length ?? 0,
+          },
+        ),
+      );
+
+      var isComplete = false;
+      while (!isComplete) {
+        final status = await client.rpc.erc20.taskEthStatus(
+          taskResponse.taskId,
+        );
+
+        if (status.isCompleted) {
+          if (status.status == 'Ok') {
+            yield ActivationProgress.success(
+              details: ActivationProgressDetails(
+                currentStep: ActivationStep.complete,
+                stepCount: 5,
+                additionalInfo: {
+                  'activatedChain': asset.id.name,
+                  'activationTime': DateTime.now().toIso8601String(),
+                  'childCount': children?.length ?? 0,
+                },
+              ),
+            );
+          } else {
+            yield buildErrorProgress(
+              asset: asset,
+              error: status.details,
+              errorCode: 'ETH_TASK_ACTIVATION_ERROR',
+              stepCount: 5,
+            );
+          }
+          isComplete = true;
+        } else {
+          final progress = _parseEthStatus(status.status);
+          yield ActivationProgress(
+            status: progress.status,
+            progressPercentage: progress.percentage,
+            progressDetails: ActivationProgressDetails(
+              currentStep: progress.step,
+              stepCount: 5,
+              additionalInfo: progress.info,
+            ),
+          );
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+        }
+      }
+    } catch (e, stack) {
+      yield buildErrorProgress(
+        asset: asset,
+        error: e,
+        stackTrace: stack,
+        errorCode: 'PLATFORM_TASK_ACTIVATION_ERROR',
+        stepCount: 5,
+      );
+    }
+  }
+
+  List<TokensRequest> _tokenRequestsFor(Asset asset, List<Asset>? children) {
+    final enableTronGasless =
+        asset.protocol is TrxProtocol && tronGaslessProvider != null;
+    return children?.map((child) {
+          final configuredGasless = child.protocol is Trc20Protocol
+              ? Trc20ActivationParams.fromJsonConfig(
+                  child.protocol.config,
+                ).gasless
+              : null;
+          return TokensRequest(
+            ticker: child.id.id,
+            gasless: enableTronGasless && configuredGasless?.enabled == true
+                ? configuredGasless
+                : null,
+          );
+        }).toList() ??
+        const [];
+  }
+
+  ({
+    String status,
+    double percentage,
+    ActivationStep step,
+    Map<String, dynamic> info,
+  })
+  _parseEthStatus(String status) {
+    switch (status) {
+      case 'ActivatingCoin':
+        return (
+          status: 'Activating platform coin...',
+          percentage: 60,
+          step: ActivationStep.platformActivation,
+          info: {'activationType': 'platform'},
+        );
+      case 'RequestingWalletBalance':
+        return (
+          status: 'Requesting wallet balance...',
+          percentage: 70,
+          step: ActivationStep.verification,
+          info: {'dataType': 'balance'},
+        );
+      case 'ActivatingTokens':
+        return (
+          status: 'Activating token assets...',
+          percentage: 80,
+          step: ActivationStep.tokenActivation,
+          info: {'activationType': 'tokens'},
+        );
+      case 'Finishing':
+        return (
+          status: 'Finalizing activation...',
+          percentage: 90,
+          step: ActivationStep.processing,
+          info: {'stage': 'completion'},
+        );
+      case 'WaitingForTrezorToConnect':
+        return (
+          status: 'Waiting for Trezor device...',
+          percentage: 50,
+          step: ActivationStep.connection,
+          info: {'deviceType': 'Trezor', 'action': 'connect'},
+        );
+      case 'FollowHwDeviceInstructions':
+        return (
+          status: 'Follow instructions on hardware device',
+          percentage: 55,
+          step: ActivationStep.connection,
+          info: {'deviceType': 'Hardware', 'action': 'follow_instructions'},
+        );
+      default:
+        return (
+          status: 'Processing activation...',
+          percentage: 95,
+          step: ActivationStep.processing,
+          info: {'status': status},
+        );
+    }
+  }
+}

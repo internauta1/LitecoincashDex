@@ -1,0 +1,148 @@
+## 0.6.0 (2026-09-24)
+
+ - **CHORE**(coins): pin the bundled coins configuration to the POL rename on
+   the coins repository's `master` (`f766b261`). It was pinned to the
+   `config-generate/test-pol` branch while the rename was in review; the
+   release ships the `master` commit.
+ - **SECURITY**(diagnostics): omit request, configuration, response and
+   exception bodies from native, remote, WASM, RPC-client and startup logging.
+   Every message reaching `logStream` or an external log callback is sanitized
+   to metadata first.
+ - **FIX**(logging): contain a failing external log callback instead of letting
+   it escape into the framework's own lifecycle.
+
+ - **CHORE**(deps): align workspace requirements with SDK 0.8.0:
+   `komodo_defi_types` `^0.6.0`, `komodo_defi_rpc_methods` `^0.7.0`,
+   `komodo_coin_updates` `^2.1.1`.
+
+## 0.5.0 — preparation history
+
+> Note: This release rolls the bundled KDF to the `3.1.0-beta` line.
+
+ - **BREAKING** **BUILD**(kdf): pin the bundled artefact to KDF `main`
+   `f3efd2ca10420f2982fa127dde84dcc17891f577` (`3.1.0-beta_f3efd2c`) for all
+   seven native/WASM targets. This reprices EVM swap gas under the
+   Amsterdam/Bogota fork rules and is visible in fee estimates.
+ - **BREAKING** **BUILD**(kdf): require a full 40-character commit hash and
+   declare `required_platforms`, so a partial or missing platform fails the
+   build instead of shipping a stale artefact.
+ - **SECURITY**(build): restrict bundled KDF sources to the official Devbuilds
+   and Nebula mirrors. Keep `devbuilds.gleec.com` first for `main/` builds.
+ - **FEAT**(streaming): add typed `GASLESS_TRACE` events and rework the web and
+   IO event-stream transports around a single service lifecycle.
+ - **FEAT**(config): allow an `IKdfOperations` implementation to be injected,
+   and export `KdfExecutableFinder` and `KdfOperationsLocalExecutable` so a test
+   harness can drive the real binary through the framework's own lifecycle.
+ - **FIX**(android): align native LOAD segments to 16 KB pages (#355).
+ - **SECURITY**(logging): stop logging full activation parameters, and suppress
+   verbose RPC logging for GasFree requests, whose bodies carry provider
+   credentials and signed authorization material.
+ - **CHORE**(build): drop the committed `CMakeCache.txt`, `Makefile` and
+   `cmake_install.cmake`. The cache recorded absolute paths from the machine
+   that generated it, and CMake refuses to configure a directory whose cache
+   came from elsewhere (#362).
+
+## 0.4.1 — preparation history
+
+ - **CHORE**(build): update bundled KDF to staging commit `52ba4f9` and use the TRON coins source for release builds.
+ - **FIX**(config): carry TRON explorer URL support through bundled build configuration (#338).
+ - **FIX**(web): harden numeric JS interop parsing for KDF responses (#336).
+ - **FEAT**(migration): expose the framework hooks needed for legacy wallet migration.
+ - **FEAT**(build): align build configuration with the balance recovery and fee-info release inputs (#341).
+
+## 0.4.0 — preparation history
+
+> Note: This release has breaking changes.
+
+ - **REFACTOR**(macos): streamline KDF binary placement; update signing flow (#247).
+ - **FIX**(streaming): gate enable_* calls on real SSE first-byte event (#332).
+ - **FIX**(auth): add mutex-protected atomic metadata updates (#328).
+ - **FIX**(startup): handle 6133 seed fallback and invalid configs (#318).
+ - **FIX**(web): improve wasm JS interop bindings (#315).
+ - **FIX**(web): complete wasm-safe sdk interop cleanup (#313).
+ - **FIX**: re-format build config.
+ - **FIX**: swap zcash params primary/backup URLs to use official z.cash as primary (#301).
+ - **FIX**(zhltc): zhltc activation fixes (#227).
+ - **FIX**(auth): store bip39 compatibility regardless of wallet type (#216).
+ - **FIX**(komodo_defi_framework): rename transformer marker and update references\n\n- Use assets/transformer_invoker.txt instead of dotfile\n- Update pubspec and READMEs\n- Remove special .gitignore unignore.
+ - **FEAT**(sdk): add token safety and fee support helpers (#319).
+ - **FEAT**(sdk): typed error handling, trading streams, and activation refactoring (#312).
+ - **FEAT**: add support for ETH-BASE and derived assets (#254).
+ - **BREAKING** **FIX**(rpc): minimise RPC usage with comprehensive caching and streaming support (#262).
+
+## 0.3.1+2
+
+ - Update a dependency to the latest release.
+
+## 0.3.1+1
+
+ - Update a dependency to the latest release.
+
+## 0.3.1
+
+ - **FEAT**(coin-updates): integrate komodo_coin_updates into komodo_coins (#190).
+
+## 0.3.0+1
+
+> Note: This release has breaking changes.
+
+ - **REFACTOR**(types): Restructure type packages.
+ - **REFACTOR**(komodo_defi_framework): add static, global log verbosity flag (#41).
+ - **PERF**: migrate packages to Dart workspace.
+ - **PERF**: migrate packages to Dart workspace".
+ - **FIX**(rpc-password-generator): update password validation to match KDF password policy (#58).
+ - **FIX**(komodo-defi-framework): export coin icons (#8).
+ - **FIX**: resolve bug with dispose logic.
+ - **FIX**: stop KDF when disposed.
+ - **FIX**: SIA support.
+ - **FIX**(kdf_operations): reduce wasm log verbosity in release mode (#11).
+ - **FIX**: kdf hashes.
+ - **FIX**(auth_service): hd wallet registration deadlock (#12).
+ - **FIX**: revert ETH coins config migration transformer.
+ - **FIX**(kdf): enable p2p in noAuth mode (#86).
+ - **FIX**(kdf-wasm-ops): response type conversion and migrate to js_interop (#14).
+ - **FIX**: Fix breaking dependency upgrades.
+ - **FIX**(debugging): Avoid unnecessary exceptions.
+ - **FIX**: unify+upgrade Dart/Flutter versions.
+ - **FIX**(withdrawal-manager): use legacy RPCs for tendermint withdrawals (#57).
+ - **FIX**: breaking tendermint config changes and build transformer not using branch-specific content URL for non-master branches (#55).
+ - **FIX**(auth_service): legacy wallet bip39 validation (#18).
+ - **FIX**(native-auth-ops): remove exceptions from logs in KDF restart function (#45).
+ - **FIX**(kdf): Rebuild KDF checksums.
+ - **FIX**(wasm-ops): fix example app login by improving JS call error handling (#185).
+ - **FIX**(komodo-defi-framework): normalise kdf startup process between native and wasm (#7).
+ - **FIX**(kdf): Update KDF for HD withdrawal bug.
+ - **FIX**(bug): Fix JSON list parsing.
+ - **FIX**(build): update config format.
+ - **FIX**(native-ops): mobile kdf startup config requires dbdir parameter (#35).
+ - **FIX**(build_transformer): npm error when building without `package.json` (#3).
+ - **FIX**(local-exe-ops): local executable startup and registration (#33).
+ - **FIX**(example): encrypted seed import (#16).
+ - **FIX**(transaction-history): EVM StackOverflow exception (#30).
+ - **FEAT**(sdk): Implement remaining SDK withdrawal functionality.
+ - **FEAT**(build): Add regex support for KDF download.
+ - **FEAT**(sdk): Balance manager WIP.
+ - **FEAT**(builds): Add regex pattern support for KDF download.
+ - **FEAT**(dev): Install `melos`.
+ - **FEAT**(auth): Add update password feature.
+ - **FEAT**(auth): Implement new exceptions for update password RPC.
+ - **FEAT**(withdraw): add ibc source channel parameter (#63).
+ - **FEAT**(operations): update KDF operations interface and implementations.
+ - **FEAT**: add configurable seed node system with remote fetching (#85).
+ - **FEAT**(sdk): add trezor support via RPC and SDK wrappers (#77).
+ - **FEAT**(ui): adjust error display layout for narrow screens (#114).
+ - **FEAT**(seed): update seed node format (#87).
+ - **FEAT**: offline private key export (#160).
+ - **FEAT**(hd): HD withdrawal supporting widgets and (WIP) multi-instance example.
+ - **BUG**(windows): Fix incompatibility between Nvidia Windows drivers and Rust.
+ - **BUG**(wasm): remove validation for legacy methods.
+ - **BREAKING** **FEAT**(sdk): Multi-SDK instance support.
+ - **BREAKING** **FEAT**: add Flutter Web WASM support with OPFS interop extensions (#176).
+
+## 0.0.1
+
+* TODO: Describe initial release.
+
+## 0.3.0+0
+
+* Documentation overhaul: comprehensive README covering local/remote setup, seed nodes, logging, direct RPC usage, and build transformer integration.

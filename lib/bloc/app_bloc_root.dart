@@ -1,0 +1,545 @@
+import 'package:web_dex/bloc/app_shutdown.dart';
+import 'dart:async';
+
+import 'package:app_theme/app_theme.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:komodo_defi_sdk/komodo_defi_sdk.dart';
+import 'package:komodo_defi_types/komodo_defi_types.dart';
+import 'package:komodo_ui/komodo_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:web_dex/analytics/events.dart';
+import 'package:web_dex/app_config/app_config.dart';
+import 'package:web_dex/bloc/analytics/analytics_bloc.dart';
+import 'package:web_dex/bloc/analytics/analytics_repo.dart';
+import 'package:web_dex/bloc/assets_overview/bloc/asset_overview_bloc.dart';
+import 'package:web_dex/bloc/assets_overview/investment_repository.dart';
+import 'package:web_dex/bloc/auth_bloc/auth_bloc.dart';
+import 'package:web_dex/bloc/bitrefill/bloc/bitrefill_bloc.dart';
+import 'package:web_dex/bloc/cex_market_data/mockup/generator.dart';
+import 'package:web_dex/bloc/cex_market_data/mockup/mock_transaction_history_repository.dart';
+import 'package:web_dex/bloc/cex_market_data/mockup/performance_mode.dart';
+import 'package:web_dex/bloc/cex_market_data/portfolio_growth/portfolio_growth_bloc.dart';
+import 'package:web_dex/bloc/cex_market_data/portfolio_growth/portfolio_growth_repository.dart';
+import 'package:web_dex/bloc/cex_market_data/price_chart/price_chart_bloc.dart';
+import 'package:web_dex/bloc/cex_market_data/price_chart/price_chart_event.dart';
+import 'package:web_dex/bloc/cex_market_data/profit_loss/profit_loss_bloc.dart';
+import 'package:web_dex/bloc/cex_market_data/profit_loss/profit_loss_repository.dart';
+import 'package:web_dex/bloc/coins_bloc/coins_bloc.dart';
+import 'package:web_dex/bloc/coins_bloc/wallet_coin_projection.dart';
+import 'package:web_dex/bloc/coins_bloc/coins_repo.dart';
+import 'package:web_dex/bloc/coins_manager/coins_manager_bloc.dart';
+import 'package:web_dex/bloc/dex_repository.dart';
+import 'package:web_dex/bloc/faucet_button/faucet_button_bloc.dart';
+import 'package:web_dex/bloc/market_maker_bot/market_maker_bot/market_maker_bot_bloc.dart';
+import 'package:web_dex/bloc/market_maker_bot/market_maker_bot/market_maker_bot_repository.dart';
+import 'package:web_dex/bloc/market_maker_bot/market_maker_order_list/market_maker_bot_order_list_repository.dart';
+import 'package:web_dex/bloc/nfts/nft_main_bloc.dart';
+import 'package:web_dex/bloc/nfts/nft_main_repo.dart';
+import 'package:web_dex/bloc/platform/platform_bloc.dart';
+import 'package:web_dex/bloc/platform/platform_event.dart';
+import 'package:web_dex/bloc/settings/settings_bloc.dart';
+import 'package:web_dex/bloc/settings/settings_repository.dart';
+import 'package:web_dex/bloc/system_health/system_clock_repository.dart';
+import 'package:web_dex/bloc/system_health/system_health_bloc.dart';
+import 'package:web_dex/bloc/taker_form/taker_bloc.dart';
+import 'package:web_dex/bloc/trading_status/trading_status_bloc.dart';
+import 'package:web_dex/bloc/trading_status/trading_status_service.dart';
+import 'package:web_dex/bloc/transaction_history/transaction_history_repo.dart';
+import 'package:web_dex/bloc/version_info/version_info_bloc.dart';
+import 'package:web_dex/blocs/kmd_rewards_bloc.dart';
+import 'package:web_dex/blocs/maker_form_bloc.dart';
+import 'package:web_dex/blocs/orderbook_bloc.dart';
+import 'package:web_dex/blocs/trading_entities_bloc.dart';
+import 'package:web_dex/blocs/wallets_repository.dart';
+import 'package:web_dex/main.dart';
+import 'package:web_dex/mm2/mm2_api/mm2_api.dart';
+import 'package:web_dex/model/main_menu_value.dart';
+import 'package:web_dex/model/stored_settings.dart';
+import 'package:web_dex/router/navigators/app_router_delegate.dart';
+import 'package:web_dex/router/navigators/back_dispatcher.dart';
+import 'package:web_dex/router/parsers/root_route_parser.dart';
+import 'package:web_dex/router/state/routing_state.dart';
+import 'package:web_dex/services/orders_service/my_orders_service.dart';
+import 'package:web_dex/services/platform_web_api/platform_web_api.dart';
+import 'package:web_dex/shared/constants.dart';
+import 'package:web_dex/shared/utils/debug_utils.dart';
+import 'package:web_dex/shared/utils/ipfs_gateway_manager.dart';
+import 'package:web_dex/shared/utils/utils.dart';
+
+class AppBlocRoot extends StatelessWidget {
+  const AppBlocRoot({
+    required this.storedPrefs,
+    required this.komodoDefiSdk,
+    super.key,
+  });
+
+  final StoredSettings storedPrefs;
+  final KomodoDefiSdk komodoDefiSdk;
+
+  // TODO: Refactor to clean up the bloat in this main file
+  Future<void> _clearCachesIfPerformanceModeChanged(
+    PerformanceMode? performanceMode,
+    ProfitLossRepository profitLossRepo,
+    PortfolioGrowthRepository portfolioGrowthRepo,
+  ) async {
+    final sharedPrefs = await SharedPreferences.getInstance();
+
+    final storedLastPerformanceMode = sharedPrefs.getString(
+      'last_performance_mode',
+    );
+
+    if (storedLastPerformanceMode != performanceMode?.name) {
+      profitLossRepo.clearCache().ignore();
+      portfolioGrowthRepo.clearCache().ignore();
+    }
+    if (performanceMode == null) {
+      sharedPrefs.remove('last_performance_mode').ignore();
+    } else {
+      sharedPrefs
+          .setString('last_performance_mode', performanceMode.name)
+          .ignore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final performanceMode = appDemoPerformanceMode;
+
+    final mm2Api = RepositoryProvider.of<Mm2Api>(context);
+    final coinsRepository = RepositoryProvider.of<CoinsRepo>(context);
+    final myOrdersService = MyOrdersService(mm2Api);
+    final tradingEntitiesBloc = TradingEntitiesBloc(
+      komodoDefiSdk,
+      mm2Api,
+      myOrdersService,
+    );
+    appShutdown.register(coinsRepository, coinsRepository.dispose);
+    appShutdown.register(tradingEntitiesBloc, tradingEntitiesBloc.dispose);
+    final dexRepository = DexRepository(mm2Api);
+
+    final transactionsRepo = performanceMode != null
+        ? MockTransactionHistoryRepo(
+            performanceMode: performanceMode,
+            demoDataGenerator: DemoDataCache.withDefaults(komodoDefiSdk),
+          )
+        : SdkTransactionHistoryRepository(sdk: komodoDefiSdk);
+
+    final profitLossRepo = ProfitLossRepository.withDefaults(
+      transactionHistoryRepo: transactionsRepo,
+      // Returns real data if performanceMode is null. Consider changing the
+      // other repositories to use this pattern.
+      demoMode: performanceMode,
+      sdk: komodoDefiSdk,
+    );
+
+    final portfolioGrowthRepo = PortfolioGrowthRepository.withDefaults(
+      transactionHistoryRepo: transactionsRepo,
+      demoMode: performanceMode,
+      coinsRepository: coinsRepository,
+      sdk: komodoDefiSdk,
+    );
+
+    _clearCachesIfPerformanceModeChanged(
+      performanceMode,
+      profitLossRepo,
+      portfolioGrowthRepo,
+    );
+
+    // startup bloc run steps
+    tradingEntitiesBloc.runUpdate();
+    routingState.selectedMenu = MainMenuValue.defaultMenu();
+
+    return MultiRepositoryProvider(
+      providers: [
+        // Keep ipfs gateway manager near root to keep in-memory cache of failing
+        // URLS to avoid repeated requests to the same failing URLs.
+        RepositoryProvider(
+          create: (_) => IpfsGatewayManager(),
+          dispose: (manager) => manager.dispose(),
+        ),
+        RepositoryProvider(
+          create: (context) => NftsRepo(
+            api: mm2Api.nft,
+            coinsRepo: coinsRepository,
+            sdk: komodoDefiSdk,
+            tradingStatusService: RepositoryProvider.of<TradingStatusService>(
+              context,
+            ),
+          ),
+        ),
+        RepositoryProvider(create: (_) => tradingEntitiesBloc),
+        RepositoryProvider(create: (_) => dexRepository),
+        RepositoryProvider(
+          create: (_) => _shutdownOwned(
+            MakerFormBloc(
+              api: mm2Api,
+              kdfSdk: komodoDefiSdk,
+              coinsRepository: coinsRepository,
+              dexRepository: dexRepository,
+            ),
+            (value) => value.dispose(),
+          ),
+        ),
+        RepositoryProvider(
+          create: (_) => _shutdownOwned(
+            OrderbookBloc(sdk: komodoDefiSdk),
+            (value) => value.dispose(),
+          ),
+        ),
+        RepositoryProvider(create: (_) => myOrdersService),
+        RepositoryProvider(
+          create: (_) => KmdRewardsBloc(coinsRepository, mm2Api),
+        ),
+        // Expose the portfolio chart repositories so that scoped views (e.g.
+        // the single-coin details page) can spin up their own
+        // PortfolioGrowthBloc/ProfitLossBloc instances that reuse the same
+        // cache, instead of sharing the app-wide whole-portfolio blocs below.
+        RepositoryProvider<ProfitLossRepository>.value(value: profitLossRepo),
+        RepositoryProvider<PortfolioGrowthRepository>.value(
+          value: portfolioGrowthRepo,
+        ),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => CoinsBloc(
+              komodoDefiSdk,
+              coinsRepository,
+              context.read<TradingStatusService>(),
+            )..add(CoinsStarted()),
+          ),
+          BlocProvider<PriceChartBloc>(
+            create: (context) => PriceChartBloc(komodoDefiSdk)
+              ..add(
+                const PriceChartStarted(
+                  symbols: ['BTC'],
+                  period: Duration(days: 30),
+                ),
+              ),
+          ),
+          BlocProvider<AssetOverviewBloc>(
+            create: (context) => AssetOverviewBloc(
+              profitLossRepo,
+              InvestmentRepository(profitLossRepository: profitLossRepo),
+              komodoDefiSdk,
+            ),
+          ),
+          BlocProvider<ProfitLossBloc>(
+            create: (context) => ProfitLossBloc(profitLossRepo, komodoDefiSdk),
+          ),
+          BlocProvider<PortfolioGrowthBloc>(
+            create: (BuildContext ctx) => PortfolioGrowthBloc(
+              portfolioGrowthRepository: portfolioGrowthRepo,
+              sdk: komodoDefiSdk,
+            ),
+          ),
+          BlocProvider<SettingsBloc>(
+            create: (context) =>
+                SettingsBloc(storedPrefs, SettingsRepository()),
+          ),
+          BlocProvider<AnalyticsBloc>(
+            lazy: false,
+            create: (context) => AnalyticsBloc(
+              analytics: GetIt.I<AnalyticsRepo>(),
+              storedData: storedPrefs,
+              repository: SettingsRepository(),
+            ),
+          ),
+          BlocProvider<TakerBloc>(
+            create: (context) {
+              final coins = context.read<CoinsBloc>();
+              return TakerBloc(
+                kdfSdk: komodoDefiSdk,
+                dexRepository: dexRepository,
+                coinsRepository: coinsRepository,
+                analyticsBloc: BlocProvider.of<AnalyticsBloc>(context),
+                walletCoinLookup: (ticker) => coins.isClosed
+                    ? null
+                    : walletCoinForTicker(coins.state.walletCoins, ticker),
+              );
+            },
+          ),
+          BlocProvider(
+            lazy: false,
+            create: (context) =>
+                NftMainBloc(repo: context.read<NftsRepo>(), sdk: komodoDefiSdk),
+          ),
+          if (isBitrefillIntegrationEnabled)
+            BlocProvider(
+              create: (context) =>
+                  BitrefillBloc()..add(const BitrefillLoadRequested()),
+            ),
+          BlocProvider<MarketMakerBotBloc>(
+            create: (context) => MarketMakerBotBloc(
+              MarketMakerBotRepository(mm2Api, SettingsRepository()),
+              MarketMakerBotOrderListRepository(
+                myOrdersService,
+                SettingsRepository(),
+                coinsRepository,
+                komodoDefiSdk,
+              ),
+              komodoDefiSdk,
+            ),
+          ),
+          BlocProvider<TradingStatusBloc>(
+            lazy: false,
+            create: (context) =>
+                TradingStatusBloc(context.read<TradingStatusService>())
+                  ..add(TradingStatusWatchStarted()),
+          ),
+          BlocProvider<SystemHealthBloc>(
+            create: (_) =>
+                SystemHealthBloc(SystemClockRepository(), mm2Api)
+                  ..add(SystemHealthPeriodicCheckStarted()),
+          ),
+          BlocProvider<CoinsManagerBloc>(
+            create: (context) => CoinsManagerBloc(
+              coinsRepo: coinsRepository,
+              sdk: komodoDefiSdk,
+              analyticsBloc: context.read<AnalyticsBloc>(),
+              settingsRepository: SettingsRepository(),
+              tradingEntitiesBloc: context.read<TradingEntitiesBloc>(),
+            ),
+          ),
+          BlocProvider<FaucetBloc>(
+            create: (context) =>
+                FaucetBloc(kdfSdk: context.read<KomodoDefiSdk>()),
+          ),
+          BlocProvider<VersionInfoBloc>(
+            lazy: false,
+            create: (context) =>
+                VersionInfoBloc(mm2Api: mm2Api, komodoDefiSdk: komodoDefiSdk)
+                  ..add(const LoadVersionInfo())
+                  ..add(const StartPeriodicPolling()),
+          ),
+          BlocProvider<PlatformBloc>(
+            lazy: false,
+            create: (context) =>
+                PlatformBloc()..add(const PlatformInitRequested()),
+          ),
+        ],
+        child: _MyAppView(),
+      ),
+    );
+  }
+}
+
+class _MyAppView extends StatefulWidget {
+  @override
+  State<_MyAppView> createState() => _MyAppViewState();
+}
+
+class _MyAppViewState extends State<_MyAppView> {
+  final AppRouterDelegate _routerDelegate = AppRouterDelegate();
+  late final RootRouteInformationParser _routeInformationParser;
+  late final AirDexBackButtonDispatcher _airDexBackButtonDispatcher;
+  late final DateTime _pageLoadStartTime;
+  late final PlatformWebApi _platformWebApi;
+
+  @override
+  void initState() {
+    _pageLoadStartTime = DateTime.now();
+    _platformWebApi = PlatformWebApi();
+    final coinsBloc = context.read<CoinsBloc>();
+    _routeInformationParser = RootRouteInformationParser(coinsBloc);
+    _airDexBackButtonDispatcher = AirDexBackButtonDispatcher(_routerDelegate);
+    routingState.selectedMenu = MainMenuValue.defaultMenu();
+
+    unawaited(_hideAppLoader());
+    _schedulePrecacheCoinIcons();
+
+    // Attempt to restore previously authenticated session
+    context.read<AuthBloc>().add(const AuthStateRestoreRequested());
+
+    // `perfAutoLoginEnabled` is a const dart-define, so a normal build folds
+    // this to `kDebugMode` exactly as before and tree-shakes the rest. It exists
+    // so a *profile* build can reach the post-login activation storm without an
+    // integration test driving the wallet-manager UI - debug frame timings
+    // measure the JIT, not the app. See `docs/TESTING.md` §7.
+    if (kDebugMode || perfAutoLoginEnabled) {
+      final walletsRepo = RepositoryProvider.of<WalletsRepository>(context);
+      final authBloc = context.read<AuthBloc>();
+      initDebugData(authBloc, walletsRepo).ignore();
+    }
+
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      onGenerateTitle: (_) => appTitle,
+      themeMode: context.select(
+        (SettingsBloc settingsBloc) => settingsBloc.state.themeMode,
+      ),
+      darkTheme: theme.global.dark,
+      theme: theme.global.light,
+      routerDelegate: _routerDelegate,
+      locale: context.locale,
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      routeInformationParser: _routeInformationParser,
+      backButtonDispatcher: _airDexBackButtonDispatcher,
+    );
+  }
+
+  void _schedulePrecacheCoinIcons() {
+    // Deliberately not driven from didChangeDependencies: that fires again on
+    // theme/locale/MediaQuery changes, and the old guard *completed* the
+    // previous operation rather than cancelling it, so a second full pass ran
+    // concurrently with the first. Kick it off once, after the first frame, so
+    // it never competes with initial layout.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || appShutdown.isClosing) return;
+      final sdk = RepositoryProvider.of<KomodoDefiSdk>(context);
+      _precacheCoinIcons(sdk).ignore();
+    });
+  }
+
+  /// Hides the native app launch loader. Currently only implemented for web.
+  // TODO: Consider using ab abstract class with separate implementations for
+  // web and native to avoid web-code in code concerning all platforms.
+  Future<void> _hideAppLoader() async {
+    if (kIsWeb) {
+      _platformWebApi.setElementDisplay('main-content', 'block');
+
+      // Trigger the zoom out animation.
+      _platformWebApi.addElementClass('loading', 'init_done');
+
+      // Await 200ms so the user can see the animation.
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+
+      // Remove the loading indicator.
+      _platformWebApi.removeElement('loading');
+
+      final delay = DateTime.now()
+          .difference(_pageLoadStartTime)
+          .inMilliseconds;
+      if (!mounted) return;
+      context.read<AnalyticsBloc>().logEvent(
+        PageInteractiveDelayEventData(
+          pageName: 'app_root',
+          interactiveDelayMs: delay,
+          spinnerTimeMs: 200,
+        ),
+      );
+    }
+  }
+
+  /// Number of icons precached concurrently. Keeps the CDN fetches for
+  /// un-bundled icons overlapping instead of strictly serialized, without
+  /// saturating the connection pool that KDF's own RPCs need.
+  static const int _iconPrecacheBatchSize = 8;
+
+  Future<void>? _currentPrecacheOperation;
+
+  Future<void> _precacheCoinIcons(KomodoDefiSdk sdk) {
+    final currentPrecacheOperation = _currentPrecacheOperation;
+    if (currentPrecacheOperation != null) {
+      log('Coin icon precache already started, reusing existing operation.');
+      return currentPrecacheOperation;
+    }
+
+    return _currentPrecacheOperation = _runCoinIconPrecache(sdk);
+  }
+
+  /// Moves the signed-in wallet's coins to the front of [assetIds], in place.
+  ///
+  /// Best effort: if the wallet list is not populated yet the original order is
+  /// kept, since this only decides *when* an already-scheduled icon loads.
+  void _prioritiseWalletIcons(List<AssetId> assetIds) {
+    if (!mounted) return;
+
+    final Set<String> walletSymbols;
+    try {
+      walletSymbols = context
+          .read<CoinsBloc>()
+          .state
+          .walletCoins
+          .values
+          .map((coin) => coin.id.symbol.configSymbol.toLowerCase())
+          .toSet();
+    } catch (_) {
+      return;
+    }
+    if (walletSymbols.isEmpty) return;
+
+    bool isWalletCoin(AssetId id) =>
+        walletSymbols.contains(id.symbol.configSymbol.toLowerCase());
+
+    final prioritised = [
+      ...assetIds.where(isWalletCoin),
+      ...assetIds.where((id) => !isWalletCoin(id)),
+    ];
+    assetIds
+      ..clear()
+      ..addAll(prioritised);
+  }
+
+  Future<void> _runCoinIconPrecache(KomodoDefiSdk sdk) async {
+    try {
+      final stopwatch = Stopwatch()..start();
+
+      // Deduplicate by the key AssetIcon actually resolves against, so the
+      // ~800 assets collapse to the number of distinct icons. Materialised
+      // because it is iterated in batches below.
+      //
+      // `coinsCount` below deliberately stays the number of *assets* covered,
+      // not the deduplicated icon count, so the analytics series remains
+      // comparable across this change.
+      final seenSymbols = <String>{};
+      var coveredAssetCount = 0;
+      final assetIdsToPrecache = sdk.assets.available.keys.where((assetId) {
+        final configSymbol = assetId.symbol.configSymbol;
+        if (excludedAssetList.contains(configSymbol)) return false;
+        coveredAssetCount++;
+        return seenSymbols.add(configSymbol.toLowerCase());
+      }).toList();
+
+      // Precache the wallet's own coins first. The set and `coveredAssetCount`
+      // are unchanged - only the order is - but the icons the user is actually
+      // looking at now land in the first batch or two instead of somewhere in
+      // the ~54 batches that follow, while every batch competes with KDF for
+      // the web main thread.
+      _prioritiseWalletIcons(assetIdsToPrecache);
+
+      for (
+        var i = 0;
+        i < assetIdsToPrecache.length;
+        i += _iconPrecacheBatchSize
+      ) {
+        if (!mounted) return;
+        final batch = assetIdsToPrecache.skip(i).take(_iconPrecacheBatchSize);
+        await Future.wait(
+          batch.map(
+            // ignore: use_build_context_synchronously
+            (assetId) => AssetIcon.precacheAssetIcon(context, assetId).onError(
+              (_, __) => debugPrint('Error precaching coin icon $assetId'),
+            ),
+          ),
+        );
+      }
+
+      if (!mounted) return;
+      context.read<AnalyticsBloc>().logEvent(
+        CoinsDataUpdatedEventData(
+          updateSource: 'remote',
+          updateDurationMs: stopwatch.elapsedMilliseconds,
+          coinsCount: coveredAssetCount,
+        ),
+      );
+    } catch (e) {
+      log('Error precaching coin icons: $e');
+      rethrow;
+    }
+  }
+}
+
+T _shutdownOwned<T extends Object>(T value, FutureOr<void> Function(T) stop) {
+  appShutdown.register(value, () => stop(value));
+  return value;
+}

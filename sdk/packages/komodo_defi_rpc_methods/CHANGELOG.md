@@ -1,0 +1,108 @@
+## 0.7.0 (2026-09-24)
+
+ - **REFACTOR**(wallet): remove the temporary typed `show_priv_key` and
+   `account_balance_read` wrappers used by the removed TRON export workaround.
+ - **SECURITY**(wallet): redact `toString()` on private-key requests, responses
+   and key metadata, and preserve strict account/range semantics in
+   `get_private_keys`.
+ - **FEAT**(activation): add `DisableCoinRequest` for `disable_coin`, which
+   disables a runtime asset without changing the wallet's saved selection.
+
+ - **CHORE**(deps): align workspace requirements with SDK 0.8.0:
+   `komodo_defi_types` `^0.6.0`.
+
+## 0.6.0 — preparation history
+
+> Note: This release has breaking GasFree relay response interfaces.
+
+ - **BREAKING** **FEAT**(gasfree): adopt the final activation, four-state account
+   status, signed relay, submission, and trace settlement contracts.
+ - **FEAT**(gasfree): add typed `stream::gasless_trace::enable` success and
+   error events for coin-scoped trace reconciliation.
+ - **SECURITY**(gasfree): remove request/fingerprint/expected-authorization
+   compatibility fields and reject undocumented relay generations.
+ - **FIX**(gasfree): generate endpoint-scoped account, withdrawal, trace, and
+   streaming exceptions from the pinned KDF Rust error enums.
+ - **FIX**(gasfree): serialize maximum withdrawals with `max: true` and no
+   `amount`, and serialize only documented GasFree withdrawal options.
+ - **FEAT**(activation): send the HD address `gap_limit` on the wire for the
+   activation methods that accept it, so callers can scan fewer addresses than
+   KDF's default of 20.
+ - **FEAT**(activation): add WebSocket expansion of EVM node entries, gated off
+   on both web and native for this release: KDF `main` panics on a `wss://`
+   reply that lands after the caller's timeout, so only HTTP nodes are sent.
+ - **FIX**(requests): encode request bodies through a single encodable path so
+   nested parameter objects serialize consistently.
+
+## 0.5.0 — preparation history
+
+> Note: This release has breaking changes.
+
+ - **FIX**(errors): preserve RPC method hints when parsing ambiguous KDF error responses (#342).
+ - **FIX**(models): accept numeric JSON values encoded as either `int` or `num` across RPC models (#336).
+ - **FEAT**(auth): add the RPC request and activation parameter support needed by legacy wallet migration.
+ - **BREAKING** **FEAT**(sia): move SIA withdrawal handling onto hardened SIA-specific RPC models and namespace methods (#343).
+
+## 0.4.0 — preparation history
+
+> Note: This release has breaking changes.
+
+ - **FIX**(sdk): close balance and pubkeysubscriptions on auth state changes (#232).
+ - **FIX**(zhltc): zhltc activation fixes (#227).
+ - **FEAT**(coins): Add TRON and TRC20 support (#316).
+ - **FEAT**(sdk): typed error handling, trading streams, and activation refactoring (#312).
+ - **FEAT**(message-signing): Add AddressPath type and refactor to use Asset/PubkeyInfo (#231).
+ - **BREAKING** **FIX**(rpc): minimise RPC usage with comprehensive caching and streaming support (#262).
+
+## 0.3.1+1
+
+ - Update a dependency to the latest release.
+
+## 0.3.1
+
+ - **FEAT**(coin-updates): integrate komodo_coin_updates into komodo_coins (#190).
+
+## 0.3.0+1
+
+> Note: This release has breaking changes.
+
+ - **REFACTOR**(tx history): Fix misrepresented fees field.
+ - **REFACTOR**: improve code quality and documentation.
+ - **REFACTOR**(types): Restructure type packages.
+ - **PERF**: migrate packages to Dart workspace".
+ - **PERF**: migrate packages to Dart workspace.
+ - **FIX**(rpc): Remove flutter dependency from RPC package.
+ - **FIX**(activation): eth PrivateKeyPolicy enum breaking changes (#96).
+ - **FIX**(withdraw): revert temporary IBC channel type changes (#136).
+ - **FIX**(activation): Fix eth activation parsing exception.
+ - **FIX**(debugging): Avoid unnecessary exceptions.
+ - **FEAT**(rpc): support max_connected on activation (#149).
+ - **FEAT**(pubkey): add streamed new address API with Trezor confirmations (#123).
+ - **FEAT**(ui): adjust error display layout for narrow screens (#114).
+ - **FEAT**(rpc): trading-related RPCs/types (#191).
+ - **FEAT**(sdk): add trezor support via RPC and SDK wrappers (#77).
+ - **FEAT**(auth): poll trezor connection status and sign out when disconnected (#126).
+ - **FEAT**(withdraw): add ibc source channel parameter (#63).
+ - **FEAT**(auth): Implement new exceptions for update password RPC.
+ - **FEAT**: nft enable RPC and activation params (#39).
+ - **FEAT**(auth): Add update password feature.
+ - **FEAT**: enhance balance and market data management in SDK.
+ - **FEAT**(rpc): implement missing RPCs (#179) (#188).
+ - **FEAT**(signing): Implement message signing + format.
+ - **FEAT**(dev): Install `melos`.
+ - **FEAT**(withdrawals): Implement HD withdrawals.
+ - **FEAT**: custom token import (#22).
+ - **FEAT**(sdk): Implement remaining SDK withdrawal functionality.
+ - **FEAT**: offline private key export (#160).
+ - **FEAT**(pubkeys): add unbanning support (#161).
+ - **FEAT**(sdk): Balance manager WIP.
+ - **FEAT**(fees): integrate fee management (#152).
+ - **FEAT**(rpc): support max_connected on activation (#149)" (#150).
+ - **BUG**(tx): Fix broken legacy UTXO tx history.
+ - **BUG**: fix missing pubkey equality operators.
+ - **BUG**(tx): Fix and optimise transaction history SDK.
+ - **BREAKING** **FEAT**(sdk): Multi-SDK instance support.
+
+## 0.3.0+0
+
+- chore: update dependencies; replace path deps with hosted; add LICENSE

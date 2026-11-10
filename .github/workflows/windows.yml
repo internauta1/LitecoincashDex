@@ -1,0 +1,93 @@
+name: Windows source verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      kdf_url:
+        description: Approved project release URL for the exact pinned Windows KDF (optional local build artifact)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.41.4'
+          channel: stable
+      - name: Verify artifact provisioning contract without executing KDF
+        run: python -m unittest discover -s tool/windows -p 'test_*.py'
+      - name: Scan source history (pinned scanner and exact-hash fixture review)
+        run: python tool/windows/scan_secrets.py
+      - name: Resolve locked dependencies (no SDK/coin/KDF transformer)
+        run: flutter pub get --enforce-lockfile
+      - name: Offline regression tests (mocked RPC and loopback SSE fixtures only)
+        run: >-
+          flutter test --no-pub
+          test/community_build_test.dart test/retired_buy_sell_routes_test.dart
+          test/wallet_coin_projection_test.dart test/best_offers_test.dart
+          test/best_offers_taker_test.dart test/best_orders_panel_test.dart
+          test/best_orders_results_test.dart test/best_orders_tabs_test.dart
+          test/best_orders_preview_test.dart test/orderbook_ownership_test.dart
+          test/orderbook_ownership_widget_test.dart
+          test/orderbook_trading_scope_regression_test.dart
+          test/private_manual_profile_test.dart
+          test_units/tests/windows/isolated_sse_pipeline_test.dart
+      - name: Refuse an explicit upstream network build
+        run: >-
+          flutter test --no-pub test/community_build_rejection_test.dart
+          --dart-define=LCC_NEXT_WINDOWS_8762=false --dart-define=LCC_TEST_WRONG_CONFIG=true
+      - name: Refuse an explicit upstream policy build
+        run: >-
+          flutter test --no-pub test/community_build_rejection_test.dart
+          --dart-define=GEO_BLOCK=enabled --dart-define=LCC_TEST_WRONG_CONFIG=true
+
+  build_candidate:
+    if: github.event_name == 'workflow_dispatch' && inputs.kdf_url != ''
+    needs: verify
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.41.4'
+          channel: stable
+      - name: Build only (never launches wallet/KDF or creates a release)
+        env:
+          LCC_APPROVED_KDF_URL: ${{ inputs.kdf_url }}
+        run: ./tool/windows/build.ps1 -Mode Production -KdfUrl $env:LCC_APPROVED_KDF_URL
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: LitecoinCashDEXNext-windows-candidate
+          path: build/windows/x64/runner/Release/
+          if-no-files-found: error
+          retention-days: 7

@@ -1,0 +1,552 @@
+// lib/src/defi/asset/coin_list_item.dart
+
+import 'package:app_theme/src/dark/theme_custom_dark.dart';
+import 'package:app_theme/src/light/theme_custom_light.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
+import 'package:web_dex/views/wallet/common/address_copy_button.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:komodo_defi_types/komodo_defi_types.dart';
+import 'package:komodo_ui/komodo_ui.dart';
+import 'package:komodo_ui_kit/komodo_ui_kit.dart';
+import 'package:web_dex/bloc/coins_bloc/coins_bloc.dart';
+import 'package:web_dex/bloc/settings/settings_bloc.dart';
+import 'package:web_dex/common/screen.dart';
+import 'package:web_dex/generated/codegen_loader.g.dart';
+import 'package:web_dex/model/coin.dart';
+import 'package:web_dex/shared/constants.dart';
+import 'package:web_dex/shared/utils/formatters.dart';
+import 'package:web_dex/shared/utils/utils.dart';
+import 'package:web_dex/shared/widgets/coin_balance.dart';
+import 'package:web_dex/shared/widgets/coin_fiat_balance.dart';
+import 'package:web_dex/shared/widgets/coin_item/coin_item.dart';
+import 'package:web_dex/shared/widgets/coin_item/coin_item_size.dart';
+import 'package:web_dex/views/wallet/common/address_icon.dart';
+
+/// Widget for showing an authenticated user's balance and anddresses for a
+/// given coin
+// TODO: Refactor to `AssetId` and migrate to the SDK UI library.
+class ExpandableCoinListItem extends StatefulWidget {
+  final Coin coin;
+  final AssetPubkeys? pubkeys;
+  final bool isSelected;
+  final Color? backgroundColor;
+  final VoidCallback? onTap;
+  final VoidCallback? onStatisticsTap;
+
+  const ExpandableCoinListItem({
+    super.key,
+    required this.coin,
+    required this.pubkeys,
+    required this.isSelected,
+    this.onTap,
+    this.onStatisticsTap,
+    this.backgroundColor,
+  });
+
+  @override
+  State<ExpandableCoinListItem> createState() => _ExpandableCoinListItemState();
+}
+
+class _ExpandableCoinListItemState extends State<ExpandableCoinListItem> {
+  // Store the expansion state in the widget's state
+  bool _isExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Attempt to restore state from PageStorage using a unique key
+    _isExpanded =
+        PageStorage.of(
+              context,
+            ).readState(context, identifier: '${widget.coin.abbr}_expanded')
+            as bool? ??
+        false;
+  }
+
+  void _handleExpansionChanged(bool expanded) {
+    setState(() {
+      _isExpanded = expanded;
+      // Save state to PageStorage using a unique key
+      PageStorage.of(context).writeState(
+        context,
+        _isExpanded,
+        identifier: '${widget.coin.abbr}_expanded',
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasAddresses = widget.pubkeys?.keys.isNotEmpty ?? false;
+    final hideBalances = context.select(
+      (SettingsBloc bloc) => bloc.state.hideBalances,
+    );
+    final sortedAddresses = hasAddresses
+        ? (List.of(
+            widget.pubkeys!.keys,
+          )..sort((a, b) => b.balance.spendable.compareTo(a.balance.spendable)))
+        : null;
+    final children = sortedAddresses != null
+        ? sortedAddresses
+              .map(
+                (pubkey) => _AddressRow(
+                  pubkey: pubkey,
+                  coin: widget.coin,
+                  isSwapAddress: pubkey == sortedAddresses.first,
+                  onTap: widget.onTap,
+                  hideBalances: hideBalances,
+                ),
+              )
+              .toList()
+        : [SkeletonListTile()];
+
+    // Match GroupedAssetTickerItem: 16 horizontal, 16 vertical for both (mobile)
+    // For desktop, set vertical padding to achieve 78px height
+    final horizontalPadding = 16.0;
+    final verticalPadding = isMobile ? 16.0 : 22.0; // 34 (icon) + 22*2 = 78
+
+    // TODO! Change rotation of the icon in contracted state
+    return CollapsibleCard(
+      key: PageStorageKey('coin_${widget.coin.abbr}'),
+      borderRadius: BorderRadius.circular(12),
+      headerPadding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
+      onTap: widget.onTap,
+      childrenMargin: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
+      childrenDecoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      initiallyExpanded: _isExpanded,
+      onExpansionChanged: _handleExpansionChanged,
+      expansionControlPosition: ExpansionControlPosition.leading,
+      emptyChildrenBehavior: EmptyChildrenBehavior.disable,
+      isDense: true,
+      title: _buildTitle(context, hideBalances),
+      maintainState: true,
+      childrenDivider: const Divider(height: 1, indent: 16, endIndent: 16),
+      trailing: CoinMoreActionsButton(coin: widget.coin),
+      children: children,
+    );
+  }
+
+  Widget _buildTitle(BuildContext context, bool hideBalances) {
+    final theme = Theme.of(context);
+
+    if (isMobile) {
+      return _buildMobileTitle(context, theme, hideBalances);
+    } else {
+      return _buildDesktopTitle(context, theme, hideBalances);
+    }
+  }
+
+  Widget _buildMobileTitle(
+    BuildContext context,
+    ThemeData theme,
+    bool hideBalances,
+  ) {
+    final statsTap = widget.onStatisticsTap;
+    final balance = widget.coin.balance(context.sdk);
+    return Container(
+      alignment: Alignment.centerLeft,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Use CoinItem with large size for mobile, matching GroupedAssetTickerItem
+          AssetIcon(widget.coin.id, size: CoinItemSize.large.coinLogo),
+          const SizedBox(width: 8),
+          // Left side: ticker with market price and 24h change below it
+          Expanded(
+            flex: 8,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Coin name - using headlineMedium for bold 16px text
+                AutoScrollText(
+                  text: widget.coin.displayName,
+                  style: theme.textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 2),
+                // Market price + 24h change (price is always shown, even when
+                // balances are hidden, since it is public market data).
+                InkWell(
+                  onTap: statsTap,
+                  borderRadius: BorderRadius.circular(8),
+                  child: _PriceWithChange(
+                    coin: widget.coin,
+                    textStyle: theme.textTheme.bodySmall,
+                    iconSize: 12,
+                    spacing: 2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Spacer(),
+          // Right side: holdings (coin amount on top, USD value below)
+          Expanded(
+            flex: 7,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _CoinAmountText(
+                  coin: widget.coin,
+                  balance: balance,
+                  hideBalances: hideBalances,
+                  style: theme.textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 2),
+                _UsdBalanceText(
+                  coin: widget.coin,
+                  textStyle: theme.textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopTitle(
+    BuildContext context,
+    ThemeData theme,
+    bool hideBalances,
+  ) {
+    final statsTap = widget.onStatisticsTap;
+    return Container(
+      alignment: Alignment.centerLeft,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(maxWidth: 180),
+            child: CoinItem(coin: widget.coin, size: CoinItemSize.large),
+          ),
+          const Spacer(),
+          // Right side: holdings on top with the market price + 24h change
+          // below it. Mirrors the mobile layout's "price under balance" idea.
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InkWell(
+                onTap: statsTap,
+                borderRadius: BorderRadius.circular(8),
+                child: CoinBalance(coin: widget.coin),
+              ),
+              const SizedBox(height: 2),
+              // Market price + 24h change (always shown, even when balances are
+              // hidden, since it is public market data).
+              InkWell(
+                onTap: statsTap,
+                borderRadius: BorderRadius.circular(8),
+                child: _PriceWithChange(
+                  coin: widget.coin,
+                  textStyle: theme.textTheme.bodySmall,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CoinAmountText extends StatelessWidget {
+  const _CoinAmountText({
+    required this.coin,
+    required this.balance,
+    required this.hideBalances,
+    this.style,
+  });
+
+  final Coin coin;
+  final double? balance;
+  final bool hideBalances;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    final amountText = _formatBalanceAmount(balance, hideBalances);
+
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Flexible(
+            child: Text(
+              amountText,
+              style: style,
+              textAlign: TextAlign.right,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Text(' ${coin.abbr}', style: style),
+        ],
+      ),
+    );
+  }
+}
+
+String _formatBalanceAmount(double? balance, bool hideBalances) {
+  if (hideBalances) return maskedBalanceText;
+  if (balance == null) return '--';
+  if (balance == 0) return '0';
+
+  final formatted = doubleToString(balance);
+  return formatted.isEmpty ? '0' : formatted;
+}
+
+/// Displays the asset's current market price in USD together with its 24h
+/// price change percentage (e.g. `$1.23 ↑2.45%`).
+///
+/// This is public market data, so it is shown regardless of the
+/// "hide balances" setting. Falls back to `--` when no price is available.
+class _PriceWithChange extends StatelessWidget {
+  const _PriceWithChange({
+    required this.coin,
+    this.textStyle,
+    this.iconSize = 18,
+    this.spacing = 2,
+  });
+
+  final Coin coin;
+  final TextStyle? textStyle;
+  final double iconSize;
+  final double spacing;
+
+  @override
+  Widget build(BuildContext context) {
+    final themeCustom = Theme.of(context).brightness == Brightness.dark
+        ? Theme.of(context).extension<ThemeCustomDark>()!
+        : Theme.of(context).extension<ThemeCustomLight>()!;
+
+    return BlocBuilder<CoinsBloc, CoinsState>(
+      builder: (context, state) {
+        final price = state.getPriceForAsset(coin.id)?.price?.toDouble();
+        // Only show the percentage when we actually have a price to anchor it.
+        final change24hPercent = price == null
+            ? null
+            : state.get24hChangeForAsset(coin.id);
+
+        return TrendPercentageText(
+          key: ValueKey('${coin.id.id}-price-available-${price != null}'),
+          value: price,
+          percentage: change24hPercent,
+          noValueText: '--',
+          upColor: themeCustom.increaseColor,
+          downColor: themeCustom.decreaseColor,
+          valueFormatter: _formatMarketPrice,
+          iconSize: iconSize,
+          spacing: spacing,
+          textStyle: textStyle,
+        );
+      },
+    );
+  }
+}
+
+String _formatMarketPrice(double value) {
+  if (value.abs() >= 1) {
+    return NumberFormat.currency(symbol: '\$', decimalDigits: 2).format(value);
+  }
+
+  final prefix = value < 0 ? '-\$' : '\$';
+  return '$prefix${formatAmt(value.abs())}';
+}
+
+class _UsdBalanceText extends StatefulWidget {
+  const _UsdBalanceText({required this.coin, this.textStyle});
+
+  final Coin coin;
+  final TextStyle? textStyle;
+
+  @override
+  State<_UsdBalanceText> createState() => _UsdBalanceTextState();
+}
+
+class _UsdBalanceTextState extends State<_UsdBalanceText> {
+  /// Held for the widget's lifetime - see [CoinBalance] for why creating this
+  /// in [build] restarts the SDK balance watcher on every rebuild. This row is
+  /// rebuilt for every `CoinsState` emission during login, so it is the hottest
+  /// of the in-build `watchBalance` call sites.
+  late Stream<BalanceInfo> _balanceStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _balanceStream = context.sdk.balances.watchBalance(widget.coin.id);
+  }
+
+  @override
+  void didUpdateWidget(covariant _UsdBalanceText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.coin.id != widget.coin.id) {
+      _balanceStream = context.sdk.balances.watchBalance(widget.coin.id);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final coin = widget.coin;
+    final textStyle = widget.textStyle;
+    final hideBalances = context.select(
+      (SettingsBloc bloc) => bloc.state.hideBalances,
+    );
+    if (hideBalances) {
+      return Text('\$$maskedBalanceText', style: textStyle);
+    }
+
+    return BlocSelector<CoinsBloc, CoinsState, double?>(
+      selector: (state) => state.getPriceForAsset(coin.id)?.price?.toDouble(),
+      builder: (context, price) {
+        return StreamBuilder<BalanceInfo>(
+          stream: _balanceStream,
+          builder: (context, snapshot) {
+            final balance = snapshot.data?.spendable.toDouble();
+            if (balance == null || price == null) {
+              return Text('--', style: textStyle);
+            }
+            final formatted = NumberFormat("#,##0.00").format(price * balance);
+            return Text('\$$formatted', style: textStyle);
+          },
+        );
+      },
+    );
+  }
+}
+
+class _AddressRow extends StatelessWidget {
+  final PubkeyInfo pubkey;
+  final Coin coin;
+  final bool isSwapAddress;
+  final bool hideBalances;
+  final VoidCallback? onTap;
+
+  const _AddressRow({
+    required this.pubkey,
+    required this.coin,
+    required this.isSwapAddress,
+    required this.hideBalances,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 12,
+          horizontal: 16,
+        ),
+        leading: AddressIcon(address: pubkey.address),
+        title: Row(
+          children: [
+            Flexible(
+              child: AutoScrollText(
+                text: pubkey.address,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Material(
+              color: Colors.transparent,
+              child: AddressCopyButton(
+                address: pubkey.address,
+                coinAbbr: coin.abbr,
+                gateOnSeedBackup: true,
+                isTestCoin: coin.isTestCoin,
+              ),
+            ),
+            if (isSwapAddress) ...[
+              const SizedBox(width: 8),
+              // TODO: Refactor to use "DexPill" component from the SDK UI library (not yet created)
+              Padding(
+                padding: EdgeInsets.only(left: isMobile ? 4 : 8),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    vertical: isMobile ? 6 : 8,
+                    horizontal: isMobile ? 8 : 12.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.tertiary,
+                    borderRadius: BorderRadius.circular(16.0),
+                  ),
+                  child: Text(
+                    LocaleKeys.swapAddress.tr(),
+                    style: TextStyle(fontSize: isMobile ? 9 : 12),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        trailing: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              hideBalances
+                  ? '$maskedBalanceText ${coin.abbr}'
+                  : '${doubleToString(pubkey.balance.spendable.toDouble())} ${coin.abbr}',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            CoinFiatBalance(
+              coin,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// This will be able to be removed in the near future when activation state
+// is removed from the GUI because it is handled internall by the SDK.
+class CoinMoreActionsButton extends StatelessWidget {
+  const CoinMoreActionsButton({required this.coin});
+
+  final Coin coin;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<CoinMoreActions>(
+      icon: const Icon(Icons.more_vert),
+      onSelected: (action) async {
+        switch (action) {
+          case CoinMoreActions.disable:
+            confirmBeforeDisablingCoin(coin, context);
+        }
+      },
+      itemBuilder: (context) {
+        return [
+          PopupMenuItem(
+            value: CoinMoreActions.disable,
+            child: Text(LocaleKeys.disable.tr()),
+          ),
+        ];
+      },
+    );
+  }
+}
+
+enum CoinMoreActions { disable }
