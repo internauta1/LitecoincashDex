@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:komodo_defi_framework/komodo_defi_framework.dart';
 import 'isolated_heartbeat_probe.dart';
 
@@ -72,37 +72,49 @@ class _IsolatedSseIndicatorState extends State<IsolatedSseIndicator> {
   }
 
   @override
-  Widget build(BuildContext context) => Stack(
-    fit: StackFit.expand,
+  Widget build(BuildContext context) => Directionality(
     textDirection: TextDirection.ltr,
-    children: [
-      widget.child,
-      Positioned(
-        top: 6,
-        right: 8,
-        child: ColoredBox(
-          color: const Color(0xff182b1f),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              textDirection: TextDirection.ltr,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'SSE heartbeats: $_received',
-                  textDirection: TextDirection.ltr,
-                  style: const TextStyle(
-                    color: Color(0xffffffff),
-                    fontSize: 12,
-                  ),
+    child: Column(
+      children: [
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final media =
+                  MediaQuery.maybeOf(context) ?? const MediaQueryData();
+              return MediaQuery(
+                data: media.copyWith(
+                  size: Size(constraints.maxWidth, constraints.maxHeight),
                 ),
-                if (widget.probe != null)
-                  GestureDetector(
-                    key: const ValueKey('isolated-heartbeat-start'),
-                    onTap: _requesting ? null : _startProbe,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                child: widget.child,
+              );
+            },
+          ),
+        ),
+        Material(
+          key: const ValueKey('isolated-heartbeat-panel'),
+          color: const Color(0xff182b1f),
+          child: SizedBox(
+            width: double.infinity,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 12,
+                runSpacing: 4,
+                children: [
+                  Text(
+                    'SSE heartbeats: $_received',
+                    textDirection: TextDirection.ltr,
+                    style: const TextStyle(
+                      color: Color(0xffffffff),
+                      fontSize: 12,
+                    ),
+                  ),
+                  if (widget.probe != null)
+                    TextButton(
+                      key: const ValueKey('isolated-heartbeat-start'),
+                      onPressed: _requesting ? null : _startProbe,
                       child: Text(
                         _requesting
                             ? 'Requesting heartbeat…'
@@ -120,12 +132,12 @@ class _IsolatedSseIndicatorState extends State<IsolatedSseIndicator> {
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    ],
+      ],
+    ),
   );
 }
