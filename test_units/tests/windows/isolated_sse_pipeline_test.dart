@@ -6,6 +6,7 @@ import 'package:komodo_defi_framework/komodo_defi_framework.dart';
 import 'package:komodo_defi_framework/src/native/windows_kdf_endpoint.dart';
 import 'package:komodo_defi_framework/src/streaming/sse_diagnostics.dart';
 import 'package:web_dex/services/testing/isolated_sse_indicator.dart';
+import 'package:web_dex/services/testing/isolated_heartbeat_probe.dart';
 
 class _LoopbackHttpOverrides extends HttpOverrides {}
 
@@ -21,6 +22,7 @@ void main() {
       });
       late HttpServer server;
       late HttpResponse streamResponse;
+      Future<void>? registrationFlushed;
       late WindowsKdfEndpoint endpoint;
       late KdfEventStreamingService service;
       var requestsToEnable = 0;
@@ -52,13 +54,15 @@ void main() {
               'event-stream',
             );
             streamResponse.write(': ready\n\n');
-            await streamResponse.flush();
+            registrationFlushed = streamResponse.flush();
+            await registrationFlushed;
             return;
           }
           final payload =
               jsonDecode(await utf8.decoder.bind(request).join())
                   as Map<String, dynamic>;
           if (payload['method'] == 'stream::heartbeat::enable') {
+            await registrationFlushed;
             requestsToEnable++;
             request.response.write(
               '{"mmrpc":"2.0","result":{"streamer_id":"fixture-heartbeat"},"id":1}',
@@ -118,8 +122,25 @@ void main() {
         );
       }
 
+      final session = Object();
+      final probe = IsolatedHeartbeatProbe(
+        scopeApproved: () => true,
+        captureSession: () async => session,
+        ensureCurrent: (_) {},
+        isConnected: () => service.isConnected,
+        knownDisposableWallet: () async => true,
+        enable: () async {
+          await enableHeartbeat();
+          return 'HEARTBEAT';
+        },
+      );
+
       await tester.pumpWidget(
-        IsolatedSseIndicator(service: service, child: const SizedBox.expand()),
+        IsolatedSseIndicator(
+          service: service,
+          probe: probe,
+          child: const SizedBox.expand(),
+        ),
       );
       expect(find.text('SSE heartbeats: 0'), findsOneWidget);
       await tester.runAsync(
@@ -130,7 +151,7 @@ void main() {
           expect(diagnostics.counts[SseStage.received] ?? 0, 0);
           expect(emitted, isEmpty);
           final heartbeat = service.heartbeatEvents.first.timeout(limit);
-          await enableHeartbeat();
+          expect(await probe.start(), HeartbeatProbeStage.enabled);
           expect((await heartbeat).timestamp, isNull);
         }, _LoopbackHttpOverrides()),
       );

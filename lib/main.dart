@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:web_dex/services/testing/isolated_heartbeat_probe.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kIsWasm, kIsWeb;
@@ -245,6 +246,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final _sensitivityController = ScreenshotSensitivityController();
   LegalDocumentsRepository? _legalDocuments;
+  IsolatedHeartbeatProbe? _isolatedHeartbeatProbe;
 
   @override
   void initState() {
@@ -290,7 +292,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     );
     final child = SseDiagnostics.isolatedRun == null
         ? root
-        : IsolatedSseIndicator(service: komodoDefiSdk.streaming, child: root);
+        : IsolatedSseIndicator(
+            service: komodoDefiSdk.streaming,
+            probe: _isolatedHeartbeatProbe ??= IsolatedHeartbeatProbe.fromSdk(
+              komodoDefiSdk,
+            ),
+            child: root,
+          );
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(

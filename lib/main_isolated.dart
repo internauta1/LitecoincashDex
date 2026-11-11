@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:convert';
+import 'package:web_dex/services/testing/isolated_heartbeat_probe.dart';
 
 import 'package:flutter/widgets.dart';
 import 'package:komodo_defi_framework/komodo_defi_framework.dart';
@@ -46,6 +48,26 @@ Future<void> main() async {
     SseDiagnostics.isolatedRun = SseDiagnostics((line) {
       liveTrace.write(line);
     });
+    final probeTrace = File(
+      p.join(
+        profile.root,
+        'logs',
+        'heartbeat-probe-${DateTime.now().microsecondsSinceEpoch}.jsonl',
+      ),
+    );
+    probeTrace.createSync(exclusive: true);
+    IsolatedHeartbeatProbe.evidenceSink = (stage) {
+      if (FileSystemEntity.typeSync(probeTrace.path, followLinks: false) !=
+              FileSystemEntityType.file ||
+          !p.equals(probeTrace.resolveSymbolicLinksSync(), probeTrace.path)) {
+        return;
+      }
+      probeTrace.writeAsStringSync(
+        '${jsonEncode({'utc': DateTime.now().toUtc().toIso8601String(), 'stage': stage.name})}\n',
+        mode: FileMode.append,
+        flush: true,
+      );
+    };
   }
   final trace = File(
     p.join(
