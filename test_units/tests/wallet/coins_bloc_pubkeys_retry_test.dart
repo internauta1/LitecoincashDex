@@ -105,6 +105,74 @@ void testCoinsBlocPubkeysRetry() {
       expect(attempts, 0);
       expect(bloc.state.pubkeys, isEmpty);
     });
+
+    test('session cancellation never consumes the retry budget', () async {
+      var attempts = 0;
+      final bloc = CoinsBloc(
+        _FakeSdk(
+          assets: _FakeAssetManager({asset.id: asset}),
+          pubkeys: _FakePubkeyManager((_) async {
+            attempts++;
+            throw const AuthSessionChangedException();
+          }),
+        ),
+        _FakeCoinsRepo(),
+        _FakeTradingStatusService(),
+      );
+      addTearDown(bloc.close);
+      bloc.add(CoinsWalletCoinUpdated(_coin(asset, CoinState.active)));
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+      await Future<void>.delayed(const Duration(seconds: 4));
+      await Future<void>.delayed(const Duration(seconds: 4));
+      expect(attempts, 1);
+      expect(bloc.state.pubkeys, isEmpty);
+    });
+
+    for (final fail in [false, true]) {
+      test(
+        'old ${fail ? 'failure' : 'success'} cannot cross logout or release the new claim',
+        () async {
+          var attempts = 0;
+          final old = Completer<AssetPubkeys>();
+          final fresh = Completer<AssetPubkeys>();
+          final bloc = CoinsBloc(
+            _FakeSdk(
+              assets: _FakeAssetManager({asset.id: asset}),
+              pubkeys: _FakePubkeyManager((_) {
+                attempts++;
+                return attempts == 1 ? old.future : fresh.future;
+              }),
+            ),
+            _FakeCoinsRepo(),
+            _FakeTradingStatusService(),
+          );
+          addTearDown(bloc.close);
+          bloc.add(CoinsWalletCoinUpdated(_coin(asset, CoinState.active)));
+          await Future<void>.delayed(const Duration(milliseconds: 30));
+          expect(attempts, 1);
+          bloc.add(CoinsSessionEnded());
+          await Future<void>.delayed(const Duration(milliseconds: 30));
+          expect(bloc.state.walletCoins, isEmpty);
+          bloc.add(CoinsWalletCoinUpdated(_coin(asset, CoinState.active)));
+          await Future<void>.delayed(const Duration(milliseconds: 30));
+          expect(attempts, 2);
+          if (fail) {
+            old.completeError(StateError('synthetic old request'));
+          } else {
+            old.complete(_assetPubkeys(asset));
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 30));
+          expect(bloc.state.pubkeys, isEmpty);
+          bloc.add(CoinsPubkeysRequested(asset.id.id));
+          await Future<void>.delayed(const Duration(milliseconds: 30));
+          await Future<void>.delayed(const Duration(seconds: 4));
+          expect(attempts, 2);
+          fresh.complete(_assetPubkeys(asset));
+          await Future<void>.delayed(const Duration(milliseconds: 30));
+          expect(bloc.state.pubkeys, contains(asset.id.id));
+        },
+      );
+    }
   });
 }
 
@@ -160,6 +228,9 @@ class _FakeSdk implements KomodoDefiSdk {
 }
 
 class _FakeCoinsRepo implements CoinsRepo {
+  @override
+  void flushCache() {}
+
   /// [CoinsBloc] subscribes to both of these from its constructor, so they
   /// have to exist before the bloc is built.
   @override

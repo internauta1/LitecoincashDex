@@ -47,6 +47,7 @@ Future<void> main() async {
     final liveTrace = IsolatedSseTraceFile.create(profile);
     SseDiagnostics.isolatedRun = SseDiagnostics((line) {
       liveTrace.write(line);
+      IsolatedHeartbeatProbe.observeSseMetadata(line);
     });
     final probeTrace = File(
       p.join(
@@ -56,14 +57,14 @@ Future<void> main() async {
       ),
     );
     probeTrace.createSync(exclusive: true);
-    IsolatedHeartbeatProbe.evidenceSink = (stage) {
+    IsolatedHeartbeatProbe.diagnosticSink = (entry) {
       if (FileSystemEntity.typeSync(probeTrace.path, followLinks: false) !=
               FileSystemEntityType.file ||
           !p.equals(probeTrace.resolveSymbolicLinksSync(), probeTrace.path)) {
         return;
       }
       probeTrace.writeAsStringSync(
-        '${jsonEncode({'utc': DateTime.now().toUtc().toIso8601String(), 'stage': stage.name})}\n',
+        '${jsonEncode(entry.toJson())}\n',
         mode: FileMode.append,
         flush: true,
       );

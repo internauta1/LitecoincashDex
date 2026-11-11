@@ -107,7 +107,7 @@ class CoinsBloc extends Bloc<CoinsEvent, CoinsState> {
 
   /// Coins with an in-flight [CoinsPubkeysRequested], so repeated broadcasts
   /// for the same coin collapse into a single SDK fetch.
-  final Set<String> _pubkeyRequestsInFlight = <String>{};
+  final Map<String, Object> _pubkeyRequestsInFlight = {};
 
   /// Wallet whose initial activation is currently running, used to ignore a
   /// duplicate [CoinsSessionStarted] for the same wallet.
@@ -149,7 +149,15 @@ class CoinsBloc extends Bloc<CoinsEvent, CoinsState> {
       return;
     }
 
-    if (!_pubkeyRequestsInFlight.add(event.coinId)) return;
+    if (_pubkeyRequestsInFlight.containsKey(event.coinId)) return;
+    final claim = Object();
+    final generation = _walletSessionGeneration;
+    _pubkeyRequestsInFlight[event.coinId] = claim;
+    bool current() =>
+        !isClosed &&
+        !emit.isDone &&
+        generation == _walletSessionGeneration &&
+        identical(_pubkeyRequestsInFlight[event.coinId], claim);
 
     try {
       // Get pubkeys from the SDK through the repo
@@ -160,7 +168,7 @@ class CoinsBloc extends Bloc<CoinsEvent, CoinsState> {
       }
 
       for (var attempt = 1; attempt <= _pubkeyFetchAttempts; attempt++) {
-        if (isClosed) return;
+        if (!current()) return;
         try {
           // Bounded: getPubkeys has no timeout of its own, and a hang here
           // would leave this coin's id in _pubkeyRequestsInFlight forever,
@@ -170,7 +178,7 @@ class CoinsBloc extends Bloc<CoinsEvent, CoinsState> {
           final pubkeys = await _kdfSdk.pubkeys
               .getPubkeys(asset)
               .timeout(_loginPathRpcTimeout);
-          if (isClosed) return;
+          if (!current()) return;
 
           // The coin may have been deactivated while the fetch was in flight.
           if (!(state.walletCoins[event.coinId]?.isActive ?? false)) return;
@@ -180,7 +188,12 @@ class CoinsBloc extends Bloc<CoinsEvent, CoinsState> {
             state.copyWith(pubkeys: {...state.pubkeys, event.coinId: pubkeys}),
           );
           return;
+        } on WalletChangedDisconnectException {
+          // Session invalidation is cancellation, not a transient RPC failure.
+          // The SDK identity and TCP guards remain responsible for rejecting it.
+          return;
         } catch (e, s) {
+          if (!current()) return;
           if (attempt >= _pubkeyFetchAttempts) {
             _log.shout(
               'Failed to get pubkeys for ${event.coinId} after $attempt '
@@ -200,7 +213,10 @@ class CoinsBloc extends Bloc<CoinsEvent, CoinsState> {
         }
       }
     } finally {
-      _pubkeyRequestsInFlight.remove(event.coinId);
+      // An old completion must not release a newer session's per-asset claim.
+      if (identical(_pubkeyRequestsInFlight[event.coinId], claim)) {
+        _pubkeyRequestsInFlight.remove(event.coinId);
+      }
     }
   }
 

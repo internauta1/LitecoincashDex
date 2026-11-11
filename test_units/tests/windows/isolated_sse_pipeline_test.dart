@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:komodo_defi_local_auth/src/auth/auth_session.dart';
+import 'package:komodo_defi_types/komodo_defi_types.dart';
 import 'package:komodo_defi_framework/komodo_defi_framework.dart';
 import 'package:komodo_defi_framework/src/native/windows_kdf_endpoint.dart';
 import 'package:komodo_defi_framework/src/streaming/sse_diagnostics.dart';
@@ -16,9 +18,12 @@ void main() {
     (tester) async {
       const limit = Duration(seconds: 5);
       final records = <Map<String, dynamic>>[];
+      final probeRecords = <HeartbeatProbeDiagnostic>[];
+      IsolatedHeartbeatProbe.registeredConnection = null;
       final diagnostics = SseDiagnostics((line) {
         expect(line, startsWith('LCC_SSE '));
         records.add(jsonDecode(line.substring(8)) as Map<String, dynamic>);
+        IsolatedHeartbeatProbe.observeSseMetadata(line);
       });
       late HttpServer server;
       late HttpResponse streamResponse;
@@ -122,11 +127,27 @@ void main() {
         );
       }
 
-      final session = Object();
+      final sessions = AuthSessionTracker();
+      addTearDown(sessions.dispose);
+      const user = KdfUser(
+        walletId: WalletId(
+          name: 'synthetic-session',
+          authOptions: AuthOptions(derivationMethod: DerivationMethod.iguana),
+        ),
+        isBip39Seed: false,
+      );
       final probe = IsolatedHeartbeatProbe(
         scopeApproved: () => true,
-        captureSession: () async => session,
-        ensureCurrent: (_) {},
+        captureSession: () async =>
+            sessions.current ?? (throw const AuthSessionChangedException()),
+        ensureCurrent: (session) {
+          if (!sessions.isCurrent(session as AuthSessionContext)) {
+            throw const AuthSessionChangedException();
+          }
+        },
+        sessionChanges: sessions.changes,
+        connectionId: () => IsolatedHeartbeatProbe.registeredConnection,
+        diagnostic: probeRecords.add,
         isConnected: () => service.isConnected,
         knownDisposableWallet: () async => true,
         enable: () async {
@@ -142,6 +163,8 @@ void main() {
           child: const SizedBox.expand(),
         ),
       );
+      sessions.observe(user);
+      await tester.pumpAndSettle();
       expect(find.text('SSE heartbeats: 0'), findsOneWidget);
       await tester.runAsync(
         () => HttpOverrides.runWithHttpOverrides(() async {
@@ -155,7 +178,7 @@ void main() {
           expect((await heartbeat).timestamp, isNull);
         }, _LoopbackHttpOverrides()),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('SSE heartbeats: 1'), findsOneWidget);
       expect(requestsToEnable, 1);
       expect(emitted, [1, 2, 3, 4, 5]);
@@ -211,13 +234,43 @@ void main() {
           await service.disconnect();
         }, _LoopbackHttpOverrides()),
       );
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('SSE heartbeats: 2'), findsOneWidget);
       expect(requestsToEnable, 2);
       expectHeartbeatPath(2, 1);
+      for (var cycle = 1; cycle <= 3; cycle++) {
+        sessions.invalidate();
+        await tester.pumpAndSettle();
+        expect(find.text('SSE heartbeats: 0'), findsOneWidget);
+        await tester.runAsync(() => service.disconnect());
+        sessions.observe(user);
+        await tester.pumpAndSettle();
+        await tester.runAsync(
+          () => HttpOverrides.runWithHttpOverrides(() async {
+            service.connectIfNeeded();
+            await service.firstByteReceived.timeout(limit);
+            final heartbeat = service.heartbeatEvents.first.timeout(limit);
+            expect(await probe.start(), HeartbeatProbeStage.enabled);
+            await heartbeat;
+          }, _LoopbackHttpOverrides()),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('SSE heartbeats: 1'), findsOneWidget);
+        expectHeartbeatPath(cycle + 2, 1);
+      }
+      final requested = probeRecords
+          .where((r) => r.stage == 'requested')
+          .toList();
+      expect(requested.map((r) => r.generation), [0, 1, 2, 3]);
+      expect(requested.map((r) => r.connection), [1, 3, 4, 5]);
+      expect(
+        jsonEncode(probeRecords.map((r) => r.toJson()).toList()),
+        isNot(contains('fixture-secret')),
+      );
+      await tester.runAsync(() => service.disconnect());
       expect(jsonEncode(records), isNot(contains('fixture-secret')));
       debugPrint(
-        'R9_SSE_FIXTURE empty_heartbeat=1:5 legacy_heartbeat=2:1 widget_counter=0->1->2',
+        'PREVIEW_SSE correlated=1:5,2:1,3:1,4:1,5:1 authenticated_generations=4',
       );
     },
     skip: !Platform.isWindows,

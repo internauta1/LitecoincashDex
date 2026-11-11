@@ -205,6 +205,21 @@ void testNftMainBloc() {
       expect(state.nftCount[NftBlockchains.eth], isNull);
     });
 
+    test(
+      'failed provider synchronization cannot become a successful empty cache',
+      () async {
+        repo.activatedChains = [NftBlockchains.eth];
+        repo.updateErrorToThrow = ApiError(
+          message: 'NFT service unavailable. Try again later.',
+        );
+        repo.nftsToReturn = [];
+        final state = await runUpdate();
+        expect(state.chainErrors[NftBlockchains.eth], isNotNull);
+        expect(state.nftCount[NftBlockchains.eth], isNull);
+        expect(state.error, isNull);
+      },
+    );
+
     test('every supported chain earns a tab, enabled or not', () async {
       repo.activatedChains = [NftBlockchains.eth];
 
@@ -613,6 +628,7 @@ class _FakeNftsRepo implements NftsRepo {
   List<NftBlockchains> unresolvedChains = [];
   List<NftToken> nftsToReturn = [];
   Object? errorToThrow;
+  Object? updateErrorToThrow;
   Future<List<NftToken>> Function(List<NftBlockchains>)? onGetNfts;
 
   /// Every activateChain call, in order. Assert the length for dedupe tests.
@@ -660,6 +676,7 @@ class _FakeNftsRepo implements NftsRepo {
 
   @override
   Future<void> updateNft(List<NftBlockchains> chains) async {
+    if (updateErrorToThrow != null) throw updateErrorToThrow!;
     if (errorToThrow != null) throw errorToThrow!;
   }
 

@@ -448,8 +448,17 @@ class NftMainBloc extends Bloc<NftMainEvent, NftMainState> {
             ),
           );
         } catch (e, s) {
-          // Non-fatal, as before: `getNfts` still returns what KDF has cached.
+          // A failed refresh cannot certify that an empty cache is up to date.
+          // Keep failure scoped to this chain instead of showing "No NFTs".
+          if (e is WalletChangedDisconnectException ||
+              e is ActivationPolicyException) {
+            rethrow;
+          }
           _log.severe('Error updating NFTs for chain $chain', e, s);
+          return MapEntry(chain, (
+            const <NftToken>[],
+            TextError(error: 'NFT service is unavailable. Try again later.'),
+          ));
         }
 
         try {

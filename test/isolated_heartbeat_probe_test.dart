@@ -99,6 +99,7 @@ void main() {
     expect(stages, [
       HeartbeatProbeStage.requested,
       HeartbeatProbeStage.enabled,
+      HeartbeatProbeStage.blocked,
     ]);
   });
   test(
@@ -145,12 +146,18 @@ void main() {
     expect(await subject.start(), HeartbeatProbeStage.blocked);
     expect(requests, 1);
   });
-  testWidgets('button acknowledgement never fabricates a received heartbeat', (tester) async {
+  testWidgets('button acknowledgement never fabricates a received heartbeat', (
+    tester,
+  ) async {
     final service = KdfEventStreamingService();
     addTearDown(service.dispose);
-    await tester.pumpWidget(IsolatedSseIndicator(
-      service: service, probe: probe(), child: const SizedBox.expand(),
-    ));
+    await tester.pumpWidget(
+      IsolatedSseIndicator(
+        service: service,
+        probe: probe(),
+        child: const SizedBox.expand(),
+      ),
+    );
     await tester.tap(find.byKey(const ValueKey('isolated-heartbeat-start')));
     await tester.pumpAndSettle();
     expect(requests, 1);

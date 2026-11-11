@@ -13,6 +13,7 @@ import 'package:web_dex/bloc/trading_status/trading_status_service.dart';
 import 'package:web_dex/mm2/mm2_api/mm2_api_nft.dart';
 import 'package:web_dex/mm2/mm2_api/rpc/errors.dart';
 import 'package:web_dex/model/nft.dart';
+import 'package:web_dex/services/nft_provider_availability.dart';
 
 /// Pins the single-source-of-truth property of [NftsRepo.resolveChains].
 ///
@@ -48,6 +49,7 @@ void testNftMainRepo() {
           activationStates: states,
         ),
         tradingStatusService: tradingStatus,
+        providerStatus: _AvailableProvider(),
       );
     }
 
@@ -206,6 +208,7 @@ void testNftMainRepo() {
           activationStates: const {},
         ),
         tradingStatusService: tradingStatus,
+        providerStatus: _AvailableProvider(),
       );
     }
 
@@ -284,6 +287,7 @@ void testNftMainRepo() {
           activationStates: const {},
         ),
         tradingStatusService: _FakeTradingStatusService(),
+        providerStatus: _AvailableProvider(),
       );
 
       await repo.updateNft([NftBlockchains.eth]);
@@ -306,6 +310,7 @@ void testNftMainRepo() {
           activationStates: const {},
         ),
         tradingStatusService: _FakeTradingStatusService(),
+        providerStatus: _AvailableProvider(),
       );
 
       // NftActivationService throws a bare Exception, which no `on BaseError`
@@ -316,6 +321,11 @@ void testNftMainRepo() {
       );
     });
   });
+}
+
+class _AvailableProvider implements NftProviderStatus {
+  @override
+  Future<void> ensureAvailable(NftBlockchains chain) async {}
 }
 
 Asset _asset(String ticker, String name, int chainId) => Asset.fromJson({

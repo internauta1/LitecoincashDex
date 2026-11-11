@@ -11,6 +11,7 @@ import 'package:web_dex/mm2/mm2_api/rpc/errors.dart';
 import 'package:web_dex/mm2/mm2_api/rpc/nft/get_nft_list/get_nft_list_res.dart';
 import 'package:web_dex/model/nft.dart';
 import 'package:web_dex/model/text_error.dart';
+import 'package:web_dex/services/nft_provider_availability.dart';
 
 /// How a set of NFT chains stands against KDF's live activation state.
 class NftChainActivation {
@@ -44,16 +45,19 @@ class NftsRepo {
     required CoinsRepo coinsRepo,
     required KomodoDefiSdk sdk,
     required TradingStatusService tradingStatusService,
+    NftProviderStatus? providerStatus,
   }) : _coinsRepo = coinsRepo,
        _api = api,
        _sdk = sdk,
-       _tradingStatusService = tradingStatusService;
+       _tradingStatusService = tradingStatusService,
+       _providerStatus = providerStatus ?? NftProviderAvailability();
 
   final Logger _log = Logger('NftsRepo');
   final CoinsRepo _coinsRepo;
   final Mm2ApiNft _api;
   final KomodoDefiSdk _sdk;
   final TradingStatusService _tradingStatusService;
+  final NftProviderStatus _providerStatus;
 
   static final Set<String> _parentTickers = NftBlockchains.supportedValues
       .map((chain) => chain.coinAbbr())
@@ -68,6 +72,10 @@ class NftsRepo {
       return;
     }
     _sdk.auth.ensureSessionContextCurrent(session);
+    for (final chain in activatedChains) {
+      await _providerStatus.ensureAvailable(chain);
+      _sdk.auth.ensureSessionContextCurrent(session);
+    }
     await _enableNftAssets(activatedChains);
     _sdk.auth.ensureSessionContextCurrent(session);
     final json = await _api.updateNftList(activatedChains);
@@ -87,6 +95,10 @@ class NftsRepo {
       return [];
     }
     _sdk.auth.ensureSessionContextCurrent(session);
+    for (final chain in activatedChains) {
+      await _providerStatus.ensureAvailable(chain);
+      _sdk.auth.ensureSessionContextCurrent(session);
+    }
     await _enableNftAssets(activatedChains);
     _sdk.auth.ensureSessionContextCurrent(session);
     final json = await _api.getNftList(activatedChains);

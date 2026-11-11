@@ -20,6 +20,9 @@ class IsolatedSseIndicator extends StatefulWidget {
 
 class _IsolatedSseIndicatorState extends State<IsolatedSseIndicator> {
   StreamSubscription<HeartbeatEvent>? _subscription;
+  StreamSubscription<Object?>? _sessionSubscription;
+  Object? _session;
+  int _revision = 0;
   int _received = 0;
   bool _requesting = false;
   HeartbeatProbeStage? _probeState;
@@ -27,8 +30,9 @@ class _IsolatedSseIndicatorState extends State<IsolatedSseIndicator> {
   Future<void> _startProbe() async {
     if (_requesting || widget.probe == null) return;
     setState(() => _requesting = true);
+    final revision = _revision;
     final result = await widget.probe!.start();
-    if (!mounted) return;
+    if (!mounted || revision != _revision) return;
     setState(() {
       _requesting = false;
       _probeState = result;
@@ -39,16 +43,37 @@ class _IsolatedSseIndicatorState extends State<IsolatedSseIndicator> {
   void initState() {
     super.initState();
     _listen();
+    _listenSession();
+  }
+
+  void _listenSession() {
+    _sessionSubscription = widget.probe?.sessionChanges?.listen((session) {
+      if (!mounted || _session == session) return;
+      setState(() {
+        _session = session;
+        _revision++;
+        _received = 0;
+        _probeState = null;
+        _requesting = false;
+      });
+    });
   }
 
   void _listen() {
     final service = widget.service;
     _subscription = service.heartbeatEvents.listen((event) {
-      if (!mounted || !identical(widget.service, service)) return;
+      if (!mounted ||
+          !identical(widget.service, service) ||
+          (widget.probe?.sessionChanges != null && _session == null)) {
+        return;
+      }
+      final revision = _revision;
       service.diagnostics?.heartbeatConsumed(event);
       setState(() => _received++);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && identical(widget.service, service)) {
+        if (mounted &&
+            identical(widget.service, service) &&
+            revision == _revision) {
           service.diagnostics?.rendered(event);
         }
       });
@@ -58,6 +83,15 @@ class _IsolatedSseIndicatorState extends State<IsolatedSseIndicator> {
   @override
   void didUpdateWidget(IsolatedSseIndicator oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.probe, widget.probe)) {
+      unawaited(_sessionSubscription?.cancel());
+      _session = null;
+      _revision++;
+      _received = 0;
+      _probeState = null;
+      _requesting = false;
+      _listenSession();
+    }
     if (!identical(oldWidget.service, widget.service)) {
       unawaited(_subscription?.cancel());
       _received = 0;
@@ -68,6 +102,7 @@ class _IsolatedSseIndicatorState extends State<IsolatedSseIndicator> {
   @override
   void dispose() {
     unawaited(_subscription?.cancel());
+    unawaited(_sessionSubscription?.cancel());
     super.dispose();
   }
 
@@ -123,7 +158,10 @@ class _IsolatedSseIndicatorState extends State<IsolatedSseIndicator> {
                             : _probeState == HeartbeatProbeStage.failed
                             ? 'Heartbeat request failed'
                             : _probeState == HeartbeatProbeStage.blocked
-                            ? 'Not ready or already requested'
+                            ? widget.probe?.lastReason ==
+                                      HeartbeatProbeReason.alreadyRequested
+                                  ? 'Already requested for this session'
+                                  : 'Not ready: authenticate and connect SSE'
                             : 'Start heartbeat test',
                         textDirection: TextDirection.ltr,
                         style: const TextStyle(
