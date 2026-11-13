@@ -17,3 +17,17 @@ push. Source code readiness and signed stable-binary readiness are different.
 No original installation, wallet, private test profile, running KDF or classic
 application may be modified by these preparation steps. No real transactions,
 orders, transfers, publication or automatic wallet launch are authorized.
+
+## Unmodified upstream candidate — 13 November 2026
+
+This isolated follow-up replaces the community KDF only in a new candidate.
+The approved R1, Preview 3 packages, existing installations and public history
+remain intact. See `docs/KDF_PROVENANCE.md` for the exact signed upstream input.
+A previous source-only release is not an exemption from conditions applicable
+to its included patch. That earlier distribution remains within the review.
+
+Remaining candidate checks are focused upstream compatibility and package/source
+integrity. A new 30–60 minute trial is not an automatic requirement for this
+experimental Preview. Do not record those longer tests as having been repeated.
+A concrete security, essential-function or distribution failure must be reported;
+no check may be bypassed to declare readiness. New hashes require new approval.

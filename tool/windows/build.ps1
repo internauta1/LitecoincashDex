@@ -70,7 +70,7 @@ try {
   if($LASTEXITCODE -ne 0){throw 'Build changed the reviewed SDK/static assets'}
   $output=Join-Path $root 'build/windows/x64/runner/Release'
   $engine=if($Mode -eq 'Validation'){'mm2_lccnext_isolated.exe'}else{'mm2_lccnext_8762.exe'}
-  if((Get-FileHash (Join-Path $output $engine)).Hash -cne 'E752B26C8208111DA9AA2F4A1AF61CA0ED818C5BF65E745C1DB21ACF5C34B6D8'){
+  if((Get-FileHash (Join-Path $output $engine)).Hash -cne 'FB641F1DF1CEB46D7C26F71BCA6BED12ACC07DEB188C7A96F93D20DF61B24AB2'){
     throw 'Packaged KDF mismatch'
   }
   [pscustomobject]@{mode=$Mode;netid=8762;rpc=$(if($Mode -eq 'Validation'){17993}else{17883});

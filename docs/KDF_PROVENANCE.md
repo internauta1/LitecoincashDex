@@ -1,31 +1,42 @@
-# Pinned KDF provenance
+# KDF provenance — unmodified upstream candidate
 
-Validated Windows executable:
-`E752B26C8208111DA9AA2F4A1AF61CA0ED818C5BF65E745C1DB21ACF5C34B6D8`
-(64,549,376 bytes). Its embedded version identifies
-`2.4.0-beta_43251de1a`, timestamp 2026-09-27T19:32:35.529190+00:00.
+This candidate selects the official Windows x64 **v2.4.0-beta** engine, revision
+`c800ea03f12dab33d2dc04a1d858ee6da111203f`. It excludes the later community
+balance/order guard and its diagnostic logging. No KDF source or executable
+bytes are modified. The runtime filename is changed for process isolation only.
 
-The full corresponding local Git revision was found as
-`43251de1a425d32334cd5830bc8ffba716812a0f`, descending from public upstream
-`c800ea03f12dab33d2dc04a1d858ee6da111203f`. The two community commits modify
-only `mm2src/mm2_main/src/lp_ordermatch.rs`: transient-zero-volume guard and
-balance/cancellation diagnostics. Their aggregate source patch is retained in
-`publication/KDF-COMMUNITY.patch`. The later dirty working tree was not copied.
-An archive was created from the immutable commit object, not from that working
-tree. Its hash is recorded in the engine lockfile. There are no Git submodules
-in that source revision.
+Official release:
+https://github.com/GLEECBTC/komodo-defi-framework/releases/tag/v2.4.0-beta
 
-Public upstream reference:
-https://github.com/GLEECBTC/komodo-defi-framework/commit/c800ea03f12dab33d2dc04a1d858ee6da111203f
+Official ZIP SHA-256:
+`A50CEA582FEEB268924CC9591A6BDF3F7F00B344821D1A46463461050F435B1A`
 
-The community commit was not found in the public upstream API. The exact KDF
-source ZIP is prepared separately for eventual redistribution with the binary;
-public URLs remain pending authorization. The binary has not been rebuilt or
-changed here. Embedded version plus source history is provenance evidence, not
-a claim of a bit-for-bit Rust rebuild or proof of original build flags.
+Extracted `mm2.exe` SHA-256 (64,461,824 bytes):
+`FB641F1DF1CEB46D7C26F71BCA6BED12ACC07DEB188C7A96F93D20DF61B24AB2`
 
-Original `LEGAL/COPYING`, `LEGAL/LICENSE-COPYRIGHT-NOTICE` and third-party notices
-are preserved under `LICENSES/KDF/`, and in the source ZIP. These include terms
-beyond the GUI license. Do not remove those notices, modify fee-related protected
-sections or describe the entire KDF solely as MIT/GPL GUI code. Publishing the
-source ZIP, binary and notices together remains a release gate.
+Embedded identity:
+`2.4.0-beta_c800ea03f2025-05-05T19:53:21.001330400+00:00`
+
+The ZIP and clear-signed checksums were verified with GPG against the release's
+published fingerprint `FD9A772C7300F4C894D1A819FE50480862E6451C`.
+The key was obtained from the release-linked Keybase account. This verifies
+signatures against that published key, not an independent identity certification.
+The release tag resolves to the exact source revision above. No claim of a
+bit-identical local Rust rebuild is made. The original source export is tracked
+by hash in `artifacts/kdf/windows.lock.json`; it is not committed as a ZIP.
+
+`LEGAL/COPYING`, `LEGAL/LICENSE-COPYRIGHT-NOTICE` and third-party notices of this
+revision are preserved under `LICENSES/KDF/`. The notice identifies Pampex LTD
+and TillyHK LTD (2023); a newer upstream notice must not replace it retroactively.
+The notice covers source and binary. Retaining original bytes does not dispense
+with applicable distribution obligations or confer a blanket legal clearance.
+
+The community patch formerly distributed in earlier source references is not
+included in the new source tree. Historical commits/releases are unchanged;
+this removal does not undo that earlier distribution. Its assessment, including
+the GPLv3 section 7 question, remains a separate documented issue.
+
+This upstream candidate restores the original insufficient-balance order
+handling. A positive balance is not assumed sufficient for fees or open orders.
+No live compatibility result is claimed until a separately authorized trial.
+No engine, new application package or source change is published automatically.

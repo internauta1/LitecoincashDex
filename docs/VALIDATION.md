@@ -32,3 +32,11 @@ hide it or kill a process without establishing ownership.
 
 No network trial or wallet launch is part of source/build preparation. A visual
 approval and its actual runtime evidence remain required before publication.
+
+For the unmodified upstream follow-up, reuse the recorded application regression
+evidence and perform a focused disposable trial: startup/login, terminal balance
+and price states, real SSE after login and relogin, read-only LCC/LTC orderbook
+and Best Orders, insufficient-balance/fee responses without placing orders, and
+normal authenticated close. Do not require another 30–60 minute run by default.
+No-fund read-only checks cannot establish funded-order cancellation behaviour;
+that needs controlled KDF unit/integration fixtures and must remain explicit.

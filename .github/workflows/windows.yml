@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       kdf_url:
-        description: Approved project release URL for the exact pinned Windows KDF (optional local build artifact)
+        description: Approved project KDF URL or exact pinned official upstream ZIP (optional build artifact)
         required: false
         type: string
 

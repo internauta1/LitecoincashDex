@@ -48,16 +48,17 @@ For offline native-cache builds see [BUILD_WINDOWS.md](docs/BUILD_WINDOWS.md).
 Output: `build/windows/x64/runner/Release/`. Keep the whole folder together.
 A standalone EXE is not a complete Flutter application.
 
-The build defaults to **netid 8762**, loopback RPC **17883**, the original verified
-legacy KDF and the independent community policy. An explicit upstream-network or
+The build defaults to **netid 8762**, loopback RPC **17883**, the unmodified official upstream
+KDF v2.4.0-beta and the independent community policy. An explicit upstream-network or
 policy build is rejected before application storage is opened. No fees, wallet
 identities or order rules are changed. Do not change these options to bypass a
 failed build or connect the application to 6133.
 
 The engine itself is not committed. Its exact SHA-256 is in
 [windows.lock.json](artifacts/kdf/windows.lock.json). Public binary/source release
-URLs are intentionally pending authorization. A complete clean build requires
-provisioning that exact artifact. No automatic alternative KDF is downloaded.
+URLs for a new community release remain pending authorization. The exact official
+upstream ZIP is already public and may be selected explicitly as documented in
+[BUILD_WINDOWS.md](docs/BUILD_WINDOWS.md). No alternative KDF is downloaded.
 
 ## Verification
 
@@ -69,7 +70,8 @@ flutter test --no-pub test/community_build_test.dart
 
 The Windows workflow runs the reviewed offline regression suite using mocked
 RPC and a loopback SSE fixture. No real KDF is started by ordinary CI. Optional
-manual workflow builds accept a project release URL and verify the pinned hash;
+manual workflow builds accept a project release URL or the exact official ZIP
+and verify the pinned hashes;
 they upload temporary CI artifacts, not GitHub releases. See
 [validation](docs/VALIDATION.md) before running a disposable-wallet candidate.
 

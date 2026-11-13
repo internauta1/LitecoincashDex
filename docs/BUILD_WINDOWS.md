@@ -8,7 +8,7 @@ pipeline: builds cannot replace the engine, metadata, icons or source commits.
 Coin/seed assets in the SDK are pinned source inputs; current market/RPC services
 remain ordinary runtime network services, not build-time fetches.
 
-Canonical production build (does not launch the application):
+Canonical production build with the exact upstream binary (does not launch the application):
 
 ```powershell
 ./tool/windows/build.ps1 -Mode Production -KdfFile 'C:\build-inputs\mm2_lccnext_8762.exe'
@@ -40,3 +40,23 @@ each complete package manifest.
 
 No code signing or installation is performed by the build. No auto-updater or
 upstream Gleec release may replace this community distribution.
+
+## Explicit official upstream download
+
+The exact release ZIP can be provided without hosting a community KDF binary:
+
+```powershell
+./tool/windows/build.ps1 -Mode Production -KdfUrl 'https://github.com/GLEECBTC/komodo-defi-framework/releases/download/v2.4.0-beta/mm2-c800ea03f-Win64.zip'
+```
+
+For a previously downloaded ZIP, provision it before building:
+
+```powershell
+python tool/windows/prepare_kdf.py --upstream-archive 'C:\build-inputs\mm2-c800ea03f-Win64.zip'
+./tool/windows/build.ps1 -Mode Production
+```
+
+Both archive and extracted executable hashes/sizes are pinned. Only the exact
+`mm2.exe` member is read; archive paths and accompanying DLLs are not extracted.
+The existing reviewed application-local MSVC runtime packaging is retained.
+There is no implicit download, alternate version or unverified fallback.
